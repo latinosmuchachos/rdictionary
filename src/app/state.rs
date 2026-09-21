@@ -6,16 +6,25 @@ use super::TranslationMode;
 
 use crate::menu::{ MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS, EDIT_DICTIONARY_MENU_ITEMS};
 
-// TODO: сделать абстрактный класс для выбора и "отнаследовать" от него MainMenuState и EditDictionaryMenuState
 #[derive(Debug, Default)]
-pub struct MainMenuState {
+pub struct MenuState {
     pub selected: usize,
+    pub items_count: usize,
 }
 
-impl MainMenuState {
+impl MenuState {
+    pub fn new(items_count: usize) -> Self {
+        assert!(items_count > 0, "Menu must contain at least one item");
+
+        Self {
+            selected: 0,
+            items_count,
+        }
+    }
+
     pub fn select_previous(&mut self) {
         self.selected = if self.selected == 0 {
-            MAIN_MENU_ITEMS.len() - 1
+            self.items_count - 1
         } else {
             self.selected - 1
         };
@@ -23,45 +32,6 @@ impl MainMenuState {
 
     pub fn select_next(&mut self) {
         self.selected = (self.selected + 1) % MAIN_MENU_ITEMS.len();
-    }
-}
-
-// TODO: сделать абстрактный класс для выбора и "отнаследовать" от него MainMenuState и EditDictionaryMenuState
-#[derive(Debug, Default)]
-pub struct TranslateMenuState {
-    pub selected: usize,
-}
-
-impl TranslateMenuState {
-    pub fn select_previous(&mut self) {
-        self.selected = if self.selected == 0 {
-            TRANSLATE_MENU_ITEMS.len() - 1
-        } else {
-            self.selected - 1
-        };
-    }
-
-    pub fn select_next(&mut self) {
-        self.selected = (self.selected + 1) % TRANSLATE_MENU_ITEMS.len();
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct EditDictionaryMenuState {
-    pub selected: usize,
-}
-
-impl EditDictionaryMenuState {
-    pub fn select_previous(&mut self) {
-        self.selected = if self.selected == 0 {
-            EDIT_DICTIONARY_MENU_ITEMS.len() - 1
-        } else {
-            self.selected - 1
-        };
-    }
-
-    pub fn select_next(&mut self) {
-        self.selected = (self.selected + 1) % EDIT_DICTIONARY_MENU_ITEMS.len();
     }
 }
 
@@ -175,11 +145,13 @@ pub struct TranslationSession {
 
 #[cfg(test)]
 mod tests {
-    use super::EditDictionaryMenuState;
+    use crate::menu::EDIT_DICTIONARY_MENU_ITEMS;
+
+use super::MenuState;
 
     #[test]
     fn edit_dictionary_menu_navigation_wraps() {
-        let mut state = EditDictionaryMenuState::default();
+        let mut state = MenuState::new(EDIT_DICTIONARY_MENU_ITEMS.len());
         assert_eq!(state.selected, 0);
 
         state.select_previous();

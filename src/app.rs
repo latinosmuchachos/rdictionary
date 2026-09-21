@@ -19,12 +19,10 @@ use tui_textarea::TextArea;
 
 mod state;
 
-pub use state::{AddPhraseState, EditDictionaryMenuState, EditPhraseState, TranslationSession};
+pub use state::{AddPhraseState, EditPhraseState, TranslationSession};
 
 use crate::{
-    app::state::{MainMenuState, TranslateMenuState}, 
-    events::EventHandler, 
-    storage::{Store, get_data_dir},
+    app::state::MenuState, events::EventHandler, menu::{EDIT_DICTIONARY_MENU_ITEMS, MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS}, storage::{Store, get_data_dir},
 };
 
 pub type CrosstermTerminal = Terminal<CrosstermBackend<Stderr>>;
@@ -72,9 +70,9 @@ pub struct AppContext {
     pub current_page: AppPage,
     pub input_text: TextArea<'static>,
     pub translation_context: Option<TranslationContext>,
-    pub main_menu_state: MainMenuState,
-    pub translate_menu_state: TranslateMenuState,
-    pub edit_dictionary_menu_state: EditDictionaryMenuState,
+    pub main_menu_state: MenuState,
+    pub translate_menu_state: MenuState,
+    pub edit_dictionary_menu_state: MenuState,
     pub add_phrase_state: AddPhraseState,
     pub edit_phrase_state: EditPhraseState,
     pub translation_session: Option<TranslationSession>,
@@ -100,9 +98,9 @@ impl AppContext {
             current_page: AppPage::MainMenu,
             input_text: Self::make_words_input(),
             translation_context: None,
-            main_menu_state: MainMenuState::default(),
-            translate_menu_state: TranslateMenuState::default(),
-            edit_dictionary_menu_state: EditDictionaryMenuState::default(),
+            main_menu_state: MenuState::new(MAIN_MENU_ITEMS.len()),
+            translate_menu_state: MenuState::new(TRANSLATE_MENU_ITEMS.len()),
+            edit_dictionary_menu_state: MenuState::new(EDIT_DICTIONARY_MENU_ITEMS.len()),
             add_phrase_state: AddPhraseState::new(original_language_idx, translation_language_idx),
             edit_phrase_state: EditPhraseState::new(store.phrases.len()),
             translation_session: None,

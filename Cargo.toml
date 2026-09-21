@@ -1,5 +1,5 @@
 [package]
-name = "my-dictionary-v2"
+name = "rdictionary"
 version = "0.1.0"
 edition = "2024"
 

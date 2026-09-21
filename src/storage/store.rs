@@ -228,7 +228,7 @@ mod tests {
         fn new() -> Self {
             let id = NEXT_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed);
             let path = std::env::temp_dir().join(format!(
-                "my-dictionary-v2-store-test-{}-{id}",
+                "rdictionary-store-test-{}-{id}",
                 std::process::id()
             ));
             fs::create_dir_all(&path).expect("failed to create test directory");

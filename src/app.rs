@@ -22,8 +22,7 @@ mod state;
 pub use state::{AddPhraseState, EditDictionaryMenuState, EditPhraseState, TranslationSession};
 
 use crate::{
-    events::EventHandler,
-    storage::{Store, get_data_dir},
+    app::state::MainMenuState, events::EventHandler, storage::{Store, get_data_dir},
 };
 
 pub type CrosstermTerminal = Terminal<CrosstermBackend<Stderr>>;
@@ -71,6 +70,7 @@ pub struct AppContext {
     pub current_page: AppPage,
     pub input_text: TextArea<'static>,
     pub translation_context: Option<TranslationContext>,
+    pub main_menu_state: MainMenuState,
     pub edit_dictionary_menu_state: EditDictionaryMenuState,
     pub add_phrase_state: AddPhraseState,
     pub edit_phrase_state: EditPhraseState,
@@ -97,6 +97,7 @@ impl AppContext {
             current_page: AppPage::MainMenu,
             input_text: Self::make_words_input(),
             translation_context: None,
+            main_menu_state: MainMenuState::default(),
             edit_dictionary_menu_state: EditDictionaryMenuState::default(),
             add_phrase_state: AddPhraseState::new(original_language_idx, translation_language_idx),
             edit_phrase_state: EditPhraseState::new(store.phrases.len()),

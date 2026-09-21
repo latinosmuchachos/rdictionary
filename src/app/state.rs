@@ -4,7 +4,29 @@ use crate::models::Phrase;
 
 use super::TranslationMode;
 
+// TODO: придумать, как учитывать не эти поля а непосредственно размеры MAIN_MENU_ITEMS и EDIT_DICTIONARY_MUNY_ITEMS
+const MAIN_MENU_ITEMS_COUNT: usize = 3;
 const EDIT_DICTIONARY_MENU_ITEMS_COUNT: usize = 3;
+
+// TODO: сделать абстрактный класс для выбора и "отнаследовать" от него MainMenuState и EditDictionaryMenuState
+#[derive(Debug, Default)]
+pub struct MainMenuState {
+    pub selected: usize,
+}
+
+impl MainMenuState {
+    pub fn select_previous(&mut self) {
+        self.selected = if self.selected == 0 {
+            MAIN_MENU_ITEMS_COUNT - 1
+        } else {
+            self.selected - 1
+        };
+    }
+
+    pub fn select_next(&mut self) {
+        self.selected = (self.selected + 1) % MAIN_MENU_ITEMS_COUNT;
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct EditDictionaryMenuState {

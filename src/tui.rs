@@ -96,6 +96,16 @@ impl Tui {
 
     fn handle_press_key_event_on_main_menu(app: &mut App, code: KeyCode) {
         match code {
+            KeyCode::Up => app.context.main_menu_state.select_previous(),
+            KeyCode::Down => app.context.main_menu_state.select_next(),
+            KeyCode::Enter => {
+                match app.context.main_menu_state.selected {
+                    0 => app.context.current_page = AppPage::TranslationMenu,
+                    1 => app.context.current_page = AppPage::EditDictionaryMenu,
+                    2 => app.set_should_exit(),
+                    _ => {},
+                };
+            }
             KeyCode::Char('q') => app.set_should_exit(),
             KeyCode::Char('t') => app.context.current_page = AppPage::TranslationMenu,
             KeyCode::Char('e') => app.context.current_page = AppPage::EditDictionaryMenu,

@@ -9,12 +9,9 @@ use ratatui::crossterm::event::{self as crossterm_event, Event as CrosstermEvent
 
 #[derive(Debug)]
 pub struct EventHandler {
-    /// Event sender channel.
     #[allow(dead_code)]
     sender: mpsc::Sender<KeyEvent>,
-    /// Event receiver channel.
     receiver: mpsc::Receiver<KeyEvent>,
-    /// Event handler thread.
     #[allow(dead_code)]
     handler: thread::JoinHandle<()>,
 }
@@ -40,7 +37,7 @@ impl EventHandler {
                                 if e.kind == crossterm_event::KeyEventKind::Press {
                                     sender.send(e)
                                 } else {
-                                    Ok(()) // ignore KeyEventKind::Release on windows
+                                    Ok(())
                                 }
                             }
                             _ => Ok(()),

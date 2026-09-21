@@ -66,30 +66,20 @@ impl Tui {
         _modifiers: KeyModifiers,
         _state: KeyEventState,
     ) {
-        match code {
-            KeyCode::Char('q') => app.set_should_exit(),
-            _ => {
-                match app.context.current_page {
-                    AppPage::MainMenu => Self::handle_press_key_event_on_main_menu(app, code),
-                    AppPage::TranslationMenu => {
-                        Self::handle_press_key_event_on_translation_menu(app, code)
-                    }
-                    // AppPage::QuestionHowMuchWords => Self::handle_press_key_event_on_question_how_much_words(app, code),
-                    AppPage::DoTranslate => {
-                        Self::handle_press_key_event_on_do_translate_page(app, code)
-                    }
-                    AppPage::EditDictionaryMenu => {
-                        Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
-                    }
-                    AppPage::AddPhrase | AppPage::EditPhraseBrowser | AppPage::SettingsMenu
-                        if code == KeyCode::Esc =>
-                    {
-                        // Temporary navigation until these pages are implemented.
-                        app.context.current_page = AppPage::EditDictionaryMenu;
-                    }
-                    _ => {}
-                }
+        match app.context.current_page {
+            AppPage::MainMenu => Self::handle_press_key_event_on_main_menu(app, code),
+            AppPage::TranslationMenu => Self::handle_press_key_event_on_translation_menu(app, code),
+            AppPage::DoTranslate => Self::handle_press_key_event_on_do_translate_page(app, code),
+            AppPage::EditDictionaryMenu => {
+                Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
             }
+            AppPage::AddPhrase | AppPage::EditPhraseBrowser | AppPage::SettingsMenu
+                if code == KeyCode::Esc =>
+            {
+                // TODO: Temporary navigation until these pages are implemented.
+                app.context.current_page = AppPage::EditDictionaryMenu;
+            }
+            _ => {}
         };
     }
 
@@ -102,7 +92,7 @@ impl Tui {
                     0 => app.context.current_page = AppPage::TranslationMenu,
                     1 => app.context.current_page = AppPage::EditDictionaryMenu,
                     2 => app.set_should_exit(),
-                    _ => {},
+                    _ => {}
                 };
             }
             _ => {}
@@ -119,18 +109,18 @@ impl Tui {
                         app.context.translation_mode = Some(TranslationMode::Daily);
                         app.context.current_page = AppPage::QuestionHowMuchWords;
                         app.context.input_mode = AppInputMode::Text;
-                    },
+                    }
                     1 => {
                         app.context.translation_mode = Some(TranslationMode::Weekly);
                         app.context.current_page = AppPage::QuestionHowMuchWords;
                         app.context.input_mode = AppInputMode::Text;
-                    },
+                    }
                     2 => {
                         app.context.translation_mode = Some(TranslationMode::Monthly);
                         app.context.current_page = AppPage::QuestionHowMuchWords;
                         app.context.input_mode = AppInputMode::Text;
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 };
             }
             KeyCode::Esc => app.context.current_page = AppPage::MainMenu,
@@ -152,7 +142,6 @@ impl Tui {
                 app.context.end_input(AppPage::TranslationMenu);
             }
             KeyCode::Char(c) if !c.is_ascii_digit() => {}
-            // блокируем ввод сверх 4 символов
             KeyCode::Char(_) if app.context.input_text.lines()[0].chars().count() >= 4 => {}
             _ => {
                 app.context.input_text.input(Input::from(key));
@@ -163,7 +152,6 @@ impl Tui {
     fn handle_press_key_event_on_do_translate_page(app: &mut App, code: KeyCode) {
         match code {
             KeyCode::Esc => {
-                // TODO: сделать предупреждающее сообщение о выходе
                 app.context.current_page = AppPage::TranslationMenu;
                 app.context.translation_context = Option::None;
             }

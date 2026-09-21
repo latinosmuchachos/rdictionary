@@ -14,7 +14,7 @@ const TRANSLATE_MENU_ITEMS: [&str; 3] =
 const EDIT_DICTIONARY_MENU_ITEMS: [&str; 3] =
     ["Add a new phrase", "Edit an existing phrase", "Settings"];
 
-// Temporary renderer for pages implemented in later steps.
+// TODO: Temporary renderer for pages implemented in later steps.
 pub fn render_placeholder_page(app_context: &mut AppContext, frame: &mut Frame) {
     frame.render_widget(
         Paragraph::new("This page is not implemented yet.\nEsc - back")
@@ -30,74 +30,67 @@ pub fn render_placeholder_page(app_context: &mut AppContext, frame: &mut Frame) 
     );
 }
 
+fn render_menu(
+    frame: &mut Frame,
+    title: &str,
+    hint: &str,
+    items: &[&str],
+    selected: usize,
+) {
+    // Создать список и настроить его оформление.
+    // Подготовить ListState с выбранным индексом.
+    // Нарисовать список в области frame.
+    let menu = List::new(items.iter().copied().map(ListItem::new))
+        .block(
+            Block::default()
+                .title(title)
+                .title_bottom(hint)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+        )
+        .style(Style::default().fg(Color::Yellow))
+        .highlight_style(
+            Style::default()
+                .fg(Color::Black)
+                .bg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("> ");
+
+    let mut state = ListState::default().with_selected(Some(selected));
+
+    frame.render_stateful_widget(menu, frame.area(), &mut state);
+        
+}
+
+pub fn render_main_menu(app_context: &mut AppContext, frame: &mut Frame) {
+    render_menu(
+        frame, 
+        "Main Menu", 
+        " Up/Down - select, Enter - open, Esc - back ", 
+        &MAIN_MENU_ITEMS, 
+        app_context.main_menu_state.selected
+    );
+}
+
 pub fn render_edit_dictionary_menu(app_context: &mut AppContext, frame: &mut Frame) {
-    let menu = List::new(EDIT_DICTIONARY_MENU_ITEMS.map(ListItem::new))
-        .block(
-            Block::default()
-                .title("Edit Dictionary Menu")
-                .title_bottom(" Up/Down - select, Enter - open, Esc - back ")
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded),
-        )
-        .style(Style::default().fg(Color::Yellow))
-        .highlight_style(
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol("> ");
-    let mut state =
-        ListState::default().with_selected(Some(app_context.edit_dictionary_menu_state.selected));
-
-    frame.render_stateful_widget(menu, frame.area(), &mut state);
+    render_menu(
+        frame, 
+        "Edit Dictionary Menu", 
+        " Up/Down - select, Enter - open, Esc - back ", 
+        &EDIT_DICTIONARY_MENU_ITEMS, 
+        app_context.edit_dictionary_menu_state.selected
+    );
 }
 
-pub fn render_main_menu(_app_context: &mut AppContext, frame: &mut Frame) {
-    // TODO: вынести default Block в отдельный метод
-    let menu = List::new(MAIN_MENU_ITEMS.map(ListItem::new))
-        .block(
-            Block::default()
-                .title("Main Menu")
-                .title_bottom(" Up/Down - select, Enter - open, Esc - back ")
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-        )
-        .style(Style::default().fg(Color::Yellow))
-        .highlight_style(
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol("> ");
-
-    let mut state = ListState::default().with_selected(Some(_app_context.main_menu_state.selected));
-
-    frame.render_stateful_widget(menu, frame.area(), &mut state);
-}
-
-pub fn render_translate_menu(_app_context: &mut AppContext, frame: &mut Frame) {
-    let menu = List::new(TRANSLATE_MENU_ITEMS.map(ListItem::new))
-        .block(
-            Block::default()
-                .title("Translate Menu")
-                .title_bottom(" Up/Down - select, Enter - open, Esc - back ")
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-        )
-        .style(Style::default().fg(Color::Yellow))
-        .highlight_style(
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol("> ");
-
-    let mut state = ListState::default().with_selected(Some(_app_context.translate_menu_state.selected));
-
-    frame.render_stateful_widget(menu, frame.area(), &mut state);
+pub fn render_translate_menu(app_context: &mut AppContext, frame: &mut Frame) {
+    render_menu(
+        frame, 
+        "Translate Menu", 
+        " Up/Down - select, Enter - open, Esc - back ", 
+        &TRANSLATE_MENU_ITEMS, 
+        app_context.translate_menu_state.selected
+    );
 }
 
 pub fn render_how_many_will_translate(app_context: &mut AppContext, frame: &mut Frame) {
@@ -113,9 +106,9 @@ pub fn render_how_many_will_translate(app_context: &mut AppContext, frame: &mut 
     frame.render_widget(outer, frame.area());
 
     let [question, input, hint] = Layout::vertical([
-        Constraint::Length(2), // вопрос
-        Constraint::Length(3), // поле (1 строка + 2 рамки)
-        Constraint::Min(0),    // подсказка/ошибка
+        Constraint::Length(2), // question
+        Constraint::Length(3), // fields (1 line + 2 borders)
+        Constraint::Min(0),    // hint/error
     ])
     .areas(inner);
 

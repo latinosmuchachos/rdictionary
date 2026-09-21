@@ -101,7 +101,6 @@ impl AddPhraseState {
 
 #[derive(Debug)]
 pub struct PhraseBrowserState {
-    /// Indices of phrases in `Store::phrases` that match the active filter.
     pub phrase_indices: Vec<usize>,
     pub selected_idx: usize,
     pub page: usize,

@@ -49,7 +49,7 @@ impl Store {
     }
 
     pub fn save_phrases(&self) -> Result<()> {
-        // TODO: записать это место как возможное место просадки производительности при большом объеме файлов
+        // TODO(optimization): записать это место как возможное место просадки производительности при большом объеме файлов
         write_json(&self.data_dir.join(PHRASES_FILE_NAME), &self.phrases)
     }
 
@@ -95,11 +95,10 @@ impl Store {
     pub fn update_phrase(&mut self, phrase: Phrase) -> Result<()> {
         self.validate_phrase(&phrase)?;
 
-        // TODO: записать это место как возможную просадку по производительности при большом количестве phrases.
+        // TODO(optimization): записать это место как возможную просадку по производительности при большом количестве phrases.
         // Варианты для оптимизаций:
         // - разделить хранение phrases на блоки по MemorizingStep
         // - разделить уже разделенный по MemorizingStep блоки хранения по интервалам id или по hash map
-        // TODO: научиться трассировать код на rust и померить то, как быстро происходят сохранения и тп
         let index = self
             .phrases
             .iter()
@@ -116,7 +115,7 @@ impl Store {
     }
 
     pub fn next_phrase_id(&self) -> Result<u32> {
-        // TODO: записать это место как возможное для оптимизации при большом количестве phrases
+        // TODO(optimization): записать это место как возможное для оптимизации при большом количестве phrases
         self.phrases
             .iter()
             .map(|phrase| phrase.id)

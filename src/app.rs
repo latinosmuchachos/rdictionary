@@ -116,7 +116,6 @@ impl AppContext {
                 .border_style(Style::default().fg(Color::Yellow))
                 .title(" Number of words "),
         );
-        // однострочное поле: подчёркивание текущей строки не нужно
         ta.set_cursor_line_style(Style::default());
         ta.set_cursor_style(Style::default().add_modifier(Modifier::REVERSED));
         ta.set_placeholder_text("e.g. 10");

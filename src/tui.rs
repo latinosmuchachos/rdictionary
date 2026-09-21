@@ -4,7 +4,8 @@ use tui_textarea::Input;
 
 use crate::app::{App, AppInputMode, AppPage, TranslationContext, TranslationMode};
 use crate::ui::{
-    render_how_many_will_translate, render_main_menu, render_translate_menu, render_translate_word,
+    render_edit_dictionary_menu, render_how_many_will_translate, render_main_menu,
+    render_placeholder_page, render_translate_menu, render_translate_word,
 };
 // use crate::events::EventHandler;
 
@@ -23,9 +24,8 @@ impl Tui {
             AppPage::TranslationMenu => render_translate_menu,
             AppPage::QuestionHowMuchWords => render_how_many_will_translate,
             AppPage::DoTranslate => render_translate_word,
-            _ => {
-                panic!("Unexpected state app. Can't find render function")
-            }
+            AppPage::EditDictionaryMenu => render_edit_dictionary_menu,
+            _ => render_placeholder_page,
         };
         app.terminal
             .draw(|frame| ui_render_func(&mut app.context, frame))?;
@@ -81,6 +81,12 @@ impl Tui {
                     }
                     AppPage::EditDictionaryMenu => {
                         Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
+                    }
+                    AppPage::AddPhrase | AppPage::EditPhraseBrowser | AppPage::SettingsMenu
+                        if code == KeyCode::Esc =>
+                    {
+                        // Temporary navigation until these pages are implemented.
+                        app.context.current_page = AppPage::EditDictionaryMenu;
                     }
                     _ => {}
                 }
@@ -154,7 +160,20 @@ impl Tui {
         }
     }
 
-    fn handle_press_key_event_on_edit_dictionary_menu(_app: &mut App, _code: KeyCode) {
-        // TODO
+    fn handle_press_key_event_on_edit_dictionary_menu(app: &mut App, code: KeyCode) {
+        match code {
+            KeyCode::Up => app.context.edit_dictionary_menu_state.select_previous(),
+            KeyCode::Down => app.context.edit_dictionary_menu_state.select_next(),
+            KeyCode::Enter => {
+                app.context.current_page = match app.context.edit_dictionary_menu_state.selected {
+                    0 => AppPage::AddPhrase,
+                    1 => AppPage::EditPhraseBrowser,
+                    2 => AppPage::SettingsMenu,
+                    _ => return,
+                };
+            }
+            KeyCode::Esc => app.context.current_page = AppPage::MainMenu,
+            _ => {}
+        }
     }
 }

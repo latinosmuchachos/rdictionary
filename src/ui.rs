@@ -1,11 +1,53 @@
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Layout},
-    style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    style::{Color, Modifier, Style},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph},
 };
 
 use crate::app::AppContext;
+
+const EDIT_DICTIONARY_MENU_ITEMS: [&str; 3] =
+    ["Add a new phrase", "Edit an existing phrase", "Settings"];
+
+pub fn render_edit_dictionary_menu(app_context: &mut AppContext, frame: &mut Frame) {
+    let menu = List::new(EDIT_DICTIONARY_MENU_ITEMS.map(ListItem::new))
+        .block(
+            Block::default()
+                .title("Edit Dictionary Menu")
+                .title_bottom(" Up/Down - select, Enter - open, Esc - back ")
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().fg(Color::Yellow))
+        .highlight_style(
+            Style::default()
+                .fg(Color::Black)
+                .bg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("> ");
+    let mut state =
+        ListState::default().with_selected(Some(app_context.edit_dictionary_menu_state.selected));
+
+    frame.render_stateful_widget(menu, frame.area(), &mut state);
+}
+
+// Temporary renderer for pages implemented in later steps.
+pub fn render_placeholder_page(app_context: &mut AppContext, frame: &mut Frame) {
+    frame.render_widget(
+        Paragraph::new("This page is not implemented yet.\nEsc - back")
+            .block(
+                Block::default()
+                    .title(format!("{:?}", app_context.current_page))
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            )
+            .style(Style::default().fg(Color::Yellow))
+            .alignment(Alignment::Center),
+        frame.area(),
+    );
+}
 
 pub fn render_main_menu(_app_context: &mut AppContext, frame: &mut Frame) {
     let msg = "Let's start translate the words!\n\

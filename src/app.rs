@@ -19,7 +19,7 @@ use tui_textarea::TextArea;
 
 mod state;
 
-pub use state::{AddPhraseState, EditPhraseState, TranslationSession};
+pub use state::{AddPhraseState, EditDictionaryMenuState, EditPhraseState, TranslationSession};
 
 use crate::{
     events::EventHandler,
@@ -71,6 +71,7 @@ pub struct AppContext {
     pub current_page: AppPage,
     pub input_text: TextArea<'static>,
     pub translation_context: Option<TranslationContext>,
+    pub edit_dictionary_menu_state: EditDictionaryMenuState,
     pub add_phrase_state: AddPhraseState,
     pub edit_phrase_state: EditPhraseState,
     pub translation_session: Option<TranslationSession>,
@@ -96,6 +97,7 @@ impl AppContext {
             current_page: AppPage::MainMenu,
             input_text: Self::make_words_input(),
             translation_context: None,
+            edit_dictionary_menu_state: EditDictionaryMenuState::default(),
             add_phrase_state: AddPhraseState::new(original_language_idx, translation_language_idx),
             edit_phrase_state: EditPhraseState::new(store.phrases.len()),
             translation_session: None,

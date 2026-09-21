@@ -4,6 +4,27 @@ use crate::models::Phrase;
 
 use super::TranslationMode;
 
+const EDIT_DICTIONARY_MENU_ITEMS_COUNT: usize = 3;
+
+#[derive(Debug, Default)]
+pub struct EditDictionaryMenuState {
+    pub selected: usize,
+}
+
+impl EditDictionaryMenuState {
+    pub fn select_previous(&mut self) {
+        self.selected = if self.selected == 0 {
+            EDIT_DICTIONARY_MENU_ITEMS_COUNT - 1
+        } else {
+            self.selected - 1
+        };
+    }
+
+    pub fn select_next(&mut self) {
+        self.selected = (self.selected + 1) % EDIT_DICTIONARY_MENU_ITEMS_COUNT;
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AddPhraseStep {
     SelectLanguages,
@@ -111,4 +132,27 @@ pub struct TranslationSession {
     pub stats: SessionStats,
     pub input: TextArea<'static>,
     pub last_answer_correct: Option<bool>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::EditDictionaryMenuState;
+
+    #[test]
+    fn edit_dictionary_menu_navigation_wraps() {
+        let mut state = EditDictionaryMenuState::default();
+        assert_eq!(state.selected, 0);
+
+        state.select_previous();
+        assert_eq!(state.selected, 2);
+
+        state.select_next();
+        assert_eq!(state.selected, 0);
+
+        state.select_next();
+        assert_eq!(state.selected, 1);
+
+        state.select_previous();
+        assert_eq!(state.selected, 0);
+    }
 }

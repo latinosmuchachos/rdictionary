@@ -4,10 +4,7 @@ use crate::models::Phrase;
 
 use super::TranslationMode;
 
-// TODO: придумать, как учитывать не эти поля а непосредственно размеры MAIN_MENU_ITEMS и EDIT_DICTIONARY_MUNY_ITEMS
-const MAIN_MENU_ITEMS_COUNT: usize = 3;
-const TRANSLATE_MENU_ITEMS_COUNT: usize = 3;
-const EDIT_DICTIONARY_MENU_ITEMS_COUNT: usize = 3;
+use crate::menu::{ MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS, EDIT_DICTIONARY_MENU_ITEMS};
 
 // TODO: сделать абстрактный класс для выбора и "отнаследовать" от него MainMenuState и EditDictionaryMenuState
 #[derive(Debug, Default)]
@@ -18,14 +15,14 @@ pub struct MainMenuState {
 impl MainMenuState {
     pub fn select_previous(&mut self) {
         self.selected = if self.selected == 0 {
-            MAIN_MENU_ITEMS_COUNT - 1
+            MAIN_MENU_ITEMS.len() - 1
         } else {
             self.selected - 1
         };
     }
 
     pub fn select_next(&mut self) {
-        self.selected = (self.selected + 1) % MAIN_MENU_ITEMS_COUNT;
+        self.selected = (self.selected + 1) % MAIN_MENU_ITEMS.len();
     }
 }
 
@@ -38,14 +35,14 @@ pub struct TranslateMenuState {
 impl TranslateMenuState {
     pub fn select_previous(&mut self) {
         self.selected = if self.selected == 0 {
-            TRANSLATE_MENU_ITEMS_COUNT - 1
+            TRANSLATE_MENU_ITEMS.len() - 1
         } else {
             self.selected - 1
         };
     }
 
     pub fn select_next(&mut self) {
-        self.selected = (self.selected + 1) % TRANSLATE_MENU_ITEMS_COUNT;
+        self.selected = (self.selected + 1) % TRANSLATE_MENU_ITEMS.len();
     }
 }
 
@@ -57,14 +54,14 @@ pub struct EditDictionaryMenuState {
 impl EditDictionaryMenuState {
     pub fn select_previous(&mut self) {
         self.selected = if self.selected == 0 {
-            EDIT_DICTIONARY_MENU_ITEMS_COUNT - 1
+            EDIT_DICTIONARY_MENU_ITEMS.len() - 1
         } else {
             self.selected - 1
         };
     }
 
     pub fn select_next(&mut self) {
-        self.selected = (self.selected + 1) % EDIT_DICTIONARY_MENU_ITEMS_COUNT;
+        self.selected = (self.selected + 1) % EDIT_DICTIONARY_MENU_ITEMS.len();
     }
 }
 

@@ -22,7 +22,9 @@ mod state;
 pub use state::{AddPhraseState, EditDictionaryMenuState, EditPhraseState, TranslationSession};
 
 use crate::{
-    app::state::{MainMenuState, TranslateMenuState}, events::EventHandler, storage::{Store, get_data_dir},
+    app::state::{MainMenuState, TranslateMenuState}, 
+    events::EventHandler, 
+    storage::{Store, get_data_dir},
 };
 
 pub type CrosstermTerminal = Terminal<CrosstermBackend<Stderr>>;

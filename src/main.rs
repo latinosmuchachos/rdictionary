@@ -2,6 +2,8 @@ mod app;
 
 mod events;
 
+mod menu;
+
 mod models;
 
 mod storage;

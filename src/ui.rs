@@ -5,14 +5,10 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph},
 };
 
-use crate::app::AppContext;
-
-const MAIN_MENU_ITEMS: [&str; 3] = 
-    ["Repeat phrases", "Edit your dictionary", "Quite from app"];
-const TRANSLATE_MENU_ITEMS: [&str; 3] = 
-    ["Daily words", "Weekly words", "Monthly words"];
-const EDIT_DICTIONARY_MENU_ITEMS: [&str; 3] =
-    ["Add a new phrase", "Edit an existing phrase", "Settings"];
+use crate::{
+    app::AppContext,
+    menu::{ MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS, EDIT_DICTIONARY_MENU_ITEMS }
+};
 
 // TODO: Temporary renderer for pages implemented in later steps.
 pub fn render_placeholder_page(app_context: &mut AppContext, frame: &mut Frame) {

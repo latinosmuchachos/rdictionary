@@ -9,6 +9,8 @@ use crate::app::AppContext;
 
 const MAIN_MENU_ITEMS: [&str; 3] = 
     ["Repeat phrases", "Edit your dictionary", "Quite from app"];
+const TRANSLATE_MENU_ITEMS: [&str; 3] = 
+    ["Daily words", "Weekly words", "Monthly words"];
 const EDIT_DICTIONARY_MENU_ITEMS: [&str; 3] =
     ["Add a new phrase", "Edit an existing phrase", "Settings"];
 
@@ -56,7 +58,7 @@ pub fn render_main_menu(_app_context: &mut AppContext, frame: &mut Frame) {
     let menu = List::new(MAIN_MENU_ITEMS.map(ListItem::new))
         .block(
             Block::default()
-                .title("Edit Dictionary Menu")
+                .title("Main Menu")
                 .title_bottom(" Up/Down - select, Enter - open, Esc - back ")
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
@@ -76,25 +78,26 @@ pub fn render_main_menu(_app_context: &mut AppContext, frame: &mut Frame) {
 }
 
 pub fn render_translate_menu(_app_context: &mut AppContext, frame: &mut Frame) {
-    let msg = "Choose option:\n\
-    d - daily words\n\
-    w - weekly words\n\
-    m - monthly words\n\
-    Esc - go back\n\
-    q - quit from app";
+    let menu = List::new(TRANSLATE_MENU_ITEMS.map(ListItem::new))
+        .block(
+            Block::default()
+                .title("Translate Menu")
+                .title_bottom(" Up/Down - select, Enter - open, Esc - back ")
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+        )
+        .style(Style::default().fg(Color::Yellow))
+        .highlight_style(
+            Style::default()
+                .fg(Color::Black)
+                .bg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("> ");
 
-    frame.render_widget(
-        Paragraph::new(msg)
-            .block(
-                Block::default()
-                    .title("Main menu")
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
-            )
-            .style(Style::default().fg(Color::Yellow))
-            .alignment(Alignment::Center),
-        frame.area(),
-    )
+    let mut state = ListState::default().with_selected(Some(_app_context.translate_menu_state.selected));
+
+    frame.render_stateful_widget(menu, frame.area(), &mut state);
 }
 
 pub fn render_how_many_will_translate(app_context: &mut AppContext, frame: &mut Frame) {

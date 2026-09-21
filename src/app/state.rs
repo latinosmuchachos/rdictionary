@@ -6,6 +6,7 @@ use super::TranslationMode;
 
 // TODO: придумать, как учитывать не эти поля а непосредственно размеры MAIN_MENU_ITEMS и EDIT_DICTIONARY_MUNY_ITEMS
 const MAIN_MENU_ITEMS_COUNT: usize = 3;
+const TRANSLATE_MENU_ITEMS_COUNT: usize = 3;
 const EDIT_DICTIONARY_MENU_ITEMS_COUNT: usize = 3;
 
 // TODO: сделать абстрактный класс для выбора и "отнаследовать" от него MainMenuState и EditDictionaryMenuState
@@ -25,6 +26,26 @@ impl MainMenuState {
 
     pub fn select_next(&mut self) {
         self.selected = (self.selected + 1) % MAIN_MENU_ITEMS_COUNT;
+    }
+}
+
+// TODO: сделать абстрактный класс для выбора и "отнаследовать" от него MainMenuState и EditDictionaryMenuState
+#[derive(Debug, Default)]
+pub struct TranslateMenuState {
+    pub selected: usize,
+}
+
+impl TranslateMenuState {
+    pub fn select_previous(&mut self) {
+        self.selected = if self.selected == 0 {
+            TRANSLATE_MENU_ITEMS_COUNT - 1
+        } else {
+            self.selected - 1
+        };
+    }
+
+    pub fn select_next(&mut self) {
+        self.selected = (self.selected + 1) % TRANSLATE_MENU_ITEMS_COUNT;
     }
 }
 

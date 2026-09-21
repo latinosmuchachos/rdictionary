@@ -7,7 +7,6 @@ use crate::ui::{
     render_edit_dictionary_menu, render_how_many_will_translate, render_main_menu,
     render_placeholder_page, render_translate_menu, render_translate_word,
 };
-// use crate::events::EventHandler;
 
 pub struct Tui {}
 
@@ -106,32 +105,35 @@ impl Tui {
                     _ => {},
                 };
             }
-            KeyCode::Char('q') => app.set_should_exit(),
-            KeyCode::Char('t') => app.context.current_page = AppPage::TranslationMenu,
-            KeyCode::Char('e') => app.context.current_page = AppPage::EditDictionaryMenu,
             _ => {}
         }
     }
 
     fn handle_press_key_event_on_translation_menu(app: &mut App, code: KeyCode) {
         match code {
-            KeyCode::Char('q') => app.set_should_exit(),
+            KeyCode::Up => app.context.translate_menu_state.select_previous(),
+            KeyCode::Down => app.context.translate_menu_state.select_next(),
+            KeyCode::Enter => {
+                match app.context.main_menu_state.selected {
+                    0 => {
+                        app.context.translation_mode = Some(TranslationMode::Daily);
+                        app.context.current_page = AppPage::QuestionHowMuchWords;
+                        app.context.input_mode = AppInputMode::Text;
+                    },
+                    1 => {
+                        app.context.translation_mode = Some(TranslationMode::Weekly);
+                        app.context.current_page = AppPage::QuestionHowMuchWords;
+                        app.context.input_mode = AppInputMode::Text;
+                    },
+                    2 => {
+                        app.context.translation_mode = Some(TranslationMode::Monthly);
+                        app.context.current_page = AppPage::QuestionHowMuchWords;
+                        app.context.input_mode = AppInputMode::Text;
+                    },
+                    _ => {},
+                };
+            }
             KeyCode::Esc => app.context.current_page = AppPage::MainMenu,
-            KeyCode::Char('d') => {
-                app.context.translation_mode = Some(TranslationMode::Daily);
-                app.context.current_page = AppPage::QuestionHowMuchWords;
-                app.context.input_mode = AppInputMode::Text;
-            }
-            KeyCode::Char('w') => {
-                app.context.translation_mode = Some(TranslationMode::Weekly);
-                app.context.current_page = AppPage::QuestionHowMuchWords;
-                app.context.input_mode = AppInputMode::Text;
-            }
-            KeyCode::Char('m') => {
-                app.context.translation_mode = Some(TranslationMode::Monthly);
-                app.context.current_page = AppPage::QuestionHowMuchWords;
-                app.context.input_mode = AppInputMode::Text;
-            }
             _ => {}
         }
     }

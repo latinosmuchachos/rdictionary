@@ -1,3 +1,5 @@
+use core::fmt;
+
 use tui_textarea::TextArea;
 
 use crate::models::Phrase;
@@ -132,7 +134,6 @@ pub struct SessionStats {
     pub same_level: u32,
 }
 
-#[derive(Debug)]
 pub struct TranslationSession {
     pub mode: TranslationMode,
     pub queue: Vec<Phrase>,
@@ -141,6 +142,20 @@ pub struct TranslationSession {
     pub stats: SessionStats,
     pub input: TextArea<'static>,
     pub last_answer_correct: Option<bool>,
+}
+
+impl fmt::Debug for TranslationSession {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TranslationSession")
+            .field("mode", &self.mode)
+            .field("current_idx", &self.current_idx)
+            .field("count_in_queue", &self.queue.len())
+            .field("unlimited", &self.unlimited)
+            .field("stats", &self.stats)
+            .field("input", &self.input)
+            .field("last_answer_correct", &self.last_answer_correct)
+            .finish_non_exhaustive()
+    }
 }
 
 #[cfg(test)]

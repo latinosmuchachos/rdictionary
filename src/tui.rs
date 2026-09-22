@@ -1,12 +1,15 @@
 use color_eyre::Result;
+use ratatui::Frame;
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
 use tui_textarea::Input;
 
-use crate::app::{App, AppInputMode, AppPage, TranslationContext, TranslationMode};
+use crate::app::{App, AppContext, AppInputMode, AppPage, TranslationContext, TranslationMode};
 use crate::ui::{
     render_edit_dictionary_menu, render_how_many_will_translate, render_main_menu,
     render_placeholder_page, render_translate_menu, render_translate_word,
 };
+
+type PageRenderer = fn(&mut AppContext, &mut Frame);
 
 pub struct Tui {}
 
@@ -18,16 +21,22 @@ impl Tui {
     }
 
     fn draw_current_page(app: &mut App) -> Result<()> {
-        let ui_render_func = match app.context.current_page {
-            AppPage::MainMenu => render_main_menu,
-            AppPage::TranslationMenu => render_translate_menu,
-            AppPage::QuestionHowMuchWords => render_how_many_will_translate,
-            AppPage::DoTranslate => render_translate_word,
-            AppPage::EditDictionaryMenu => render_edit_dictionary_menu,
-            _ => render_placeholder_page,
+        let (ui_render_func, renderer): (PageRenderer, &str) = match app.context.current_page {
+            AppPage::MainMenu => (render_main_menu, "render_main_menu"),
+            AppPage::TranslationMenu => (render_translate_menu, "render_translate_menu"),
+            AppPage::QuestionHowMuchWords => (render_how_many_will_translate, "render_how_many_will_translate"),
+            AppPage::DoTranslate => (render_translate_word, "render_translate_word"),
+            AppPage::EditDictionaryMenu => (render_edit_dictionary_menu, "render_edit_dictionary_menu"),
+            _ => (render_placeholder_page, "render_placeholder_page")
         };
+        tracing::debug!(
+            renderer = renderer,
+            context = ?app.context,
+            "Drawing page"
+        );
         app.terminal
             .draw(|frame| ui_render_func(&mut app.context, frame))?;
+
         Ok(())
     }
 

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     io::{self, Stderr},
     panic,
@@ -62,7 +63,6 @@ pub enum AppPage {
     SettingsAttempts,
 }
 
-#[derive(Debug)]
 pub struct AppContext {
     pub should_quit: bool,
     pub input_mode: AppInputMode,
@@ -76,6 +76,22 @@ pub struct AppContext {
     pub add_phrase_state: AddPhraseState,
     pub edit_phrase_state: EditPhraseState,
     pub translation_session: Option<TranslationSession>,
+}
+
+impl fmt::Debug for AppContext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AppContext")
+            .field("should_quit", &self.should_quit)
+            .field("input_mode", &self.input_mode)
+            .field("translation_mode", &self.translation_mode)
+            .field("current_page", &self.current_page)
+            .field("translation_context", &self.translation_context)
+            .field("main_menu_state", &self.main_menu_state)
+            .field("translate_menu_state", &self.translate_menu_state)
+            .field("edit_dictionary_menu_state", &self.edit_dictionary_menu_state)
+            .field("translation_session", &self.translation_session)
+            .finish_non_exhaustive()
+    }
 }
 
 impl AppContext {

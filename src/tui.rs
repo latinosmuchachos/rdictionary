@@ -41,6 +41,10 @@ impl Tui {
     }
 
     fn handle_event(app: &mut App) -> Result<()> {
+        tracing::debug!(
+            input_mode = ?app.context.input_mode,
+            "Handling event"
+        );
         match app.context.input_mode {
             AppInputMode::Key => Self::handle_key_event(app)?,
             AppInputMode::Text => Self::handle_input_text(app)?,
@@ -75,6 +79,10 @@ impl Tui {
         _modifiers: KeyModifiers,
         _state: KeyEventState,
     ) {
+        tracing::debug!(
+            current_page = ?app.context.current_page,
+            "Handle press key event"
+        );
         match app.context.current_page {
             AppPage::MainMenu => Self::handle_press_key_event_on_main_menu(app, code),
             AppPage::TranslationMenu => Self::handle_press_key_event_on_translation_menu(app, code),
@@ -93,6 +101,10 @@ impl Tui {
     }
 
     fn handle_press_key_event_on_main_menu(app: &mut App, code: KeyCode) {
+        tracing::debug!(
+            code = ?code,
+            "Handle press key event on main menu"
+        );
         match code {
             KeyCode::Up => app.context.main_menu_state.select_previous(),
             KeyCode::Down => app.context.main_menu_state.select_next(),
@@ -109,6 +121,10 @@ impl Tui {
     }
 
     fn handle_press_key_event_on_translation_menu(app: &mut App, code: KeyCode) {
+        tracing::debug!(
+            code = ?code,
+            "Handle press key event on translation menu"
+        );
         match code {
             KeyCode::Up => app.context.translate_menu_state.select_previous(),
             KeyCode::Down => app.context.translate_menu_state.select_next(),
@@ -159,6 +175,10 @@ impl Tui {
     }
 
     fn handle_press_key_event_on_do_translate_page(app: &mut App, code: KeyCode) {
+        tracing::debug!(
+            code = ?code,
+            "Handle press key event on do translate page"
+        );
         match code {
             KeyCode::Esc => {
                 app.context.current_page = AppPage::TranslationMenu;
@@ -170,6 +190,10 @@ impl Tui {
     }
 
     fn handle_press_key_event_on_edit_dictionary_menu(app: &mut App, code: KeyCode) {
+        tracing::debug!(
+            code = ?code,
+            "Handle press key event on edit dictionary menu"
+        );
         match code {
             KeyCode::Up => app.context.edit_dictionary_menu_state.select_previous(),
             KeyCode::Down => app.context.edit_dictionary_menu_state.select_next(),

@@ -1,5 +1,6 @@
 /target
 /data
+/logs
 plan.md
 tz.md
 Cargo.lock

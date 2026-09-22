@@ -184,7 +184,6 @@ impl Tui {
                 app.context.current_page = AppPage::TranslationMenu;
                 app.context.translation_context = Option::None;
             }
-            KeyCode::Char('q') => app.set_should_exit(),
             _ => {} // TODO: сделать ввод слов
         }
     }

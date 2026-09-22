@@ -131,8 +131,7 @@ pub fn render_how_many_will_translate(app_context: &mut AppContext, frame: &mut 
 pub fn render_translate_word(app_context: &mut AppContext, frame: &mut Frame) {
     if let Some(translation_context) = app_context.translation_context {
         let msg = format!(
-            "You should translate {} {:?} words!\n\
-            (Esc - go back, q - quit from app)",
+            "You should translate {} {:?} words!",
             translation_context.expected_count, app_context.translation_mode,
         );
         frame.render_widget(

@@ -20,7 +20,9 @@ use tui_textarea::TextArea;
 
 mod state;
 
-pub use state::{AddPhraseState, AddPhraseStep, EditPhraseState, TranslationSession};
+pub use state::{
+    AddPhraseState, AddPhraseStep, EditPhraseState, EditPhraseStep, TranslationSession,
+};
 
 use crate::{
     app::state::MenuState,

@@ -4,6 +4,7 @@ use ratatui::{
     style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders},
 };
+use regex::Regex;
 use tui_textarea::TextArea;
 
 use crate::{models::Phrase, storage::Store};
@@ -43,7 +44,7 @@ impl MenuState {
 pub enum AddPhraseStep {
     SelectLanguages,
     EnterOriginal,
-    EnterTranslation
+    EnterTranslation,
 }
 
 #[derive(Debug)]
@@ -118,10 +119,106 @@ impl PhraseBrowserState {
             page: 0,
             page_size: 1,
             search_mode: false,
-            search_pattern: TextArea::default(),
+            search_pattern: Self::make_search_input(),
             regex_error: None,
         }
     }
+
+    fn make_search_input() -> TextArea<'static> {
+        let mut input = TextArea::default();
+        input.set_block(
+            Block::default()
+                .title(" Search (regex) ")
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        );
+        input.set_cursor_line_style(Style::default());
+        input.set_placeholder_text("Match original or translation");
+        input
+    }
+
+    pub fn selected_phrase_index(&self) -> Option<usize> {
+        self.phrase_indices.get(self.selected_idx).copied()
+    }
+
+    pub fn page_count(&self) -> usize {
+        self.phrase_indices.len().div_ceil(self.page_size)
+    }
+
+    pub fn set_page_size(&mut self, page_size: usize) {
+        // Keep navigation valid even when the terminal has no room for a row.
+        self.page_size = page_size.max(1);
+        self.sync_selection();
+    }
+
+    fn sync_selection(&mut self) {
+        self.selected_idx = self
+            .selected_idx
+            .min(self.phrase_indices.len().saturating_sub(1));
+        self.page = self.selected_idx / self.page_size;
+    }
+
+    pub fn select_previous(&mut self) {
+        self.selected_idx = self.selected_idx.saturating_sub(1);
+        self.sync_selection();
+    }
+
+    pub fn select_next(&mut self) {
+        self.selected_idx = self.selected_idx.saturating_add(1);
+        self.sync_selection();
+    }
+
+    pub fn previous_page(&mut self) {
+        if self.page > 0 {
+            self.selected_idx -= self.page_size;
+            self.sync_selection();
+        }
+    }
+
+    pub fn next_page(&mut self) {
+        if self.page + 1 < self.page_count() {
+            self.selected_idx = self.selected_idx.saturating_add(self.page_size);
+            self.sync_selection();
+        }
+    }
+
+    pub fn apply_filter(&mut self, phrases: &[Phrase]) {
+        let selected_phrase = self.selected_phrase_index();
+        match Regex::new(&self.search_pattern.lines()[0]) {
+            Ok(regex) => {
+                self.phrase_indices = phrases
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, phrase)| {
+                        regex.is_match(&phrase.original_text)
+                            || regex.is_match(&phrase.translation_text)
+                    })
+                    .map(|(index, _)| index)
+                    .collect();
+                self.regex_error = None;
+            }
+            Err(error) => {
+                self.phrase_indices.clear();
+                self.regex_error = Some(error.to_string());
+            }
+        }
+        self.selected_idx = selected_phrase
+            .and_then(|selected| {
+                self.phrase_indices
+                    .iter()
+                    .position(|&index| index == selected)
+            })
+            .unwrap_or(0);
+        self.sync_selection();
+    }
+
+    pub fn clear_search(&mut self, phrases: &[Phrase]) {
+        self.search_mode = false;
+        self.search_pattern = Self::make_search_input();
+        self.apply_filter(phrases);
+    }
+
+    pub fn xxx() {}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

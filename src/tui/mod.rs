@@ -1,16 +1,20 @@
 use color_eyre::Result;
 use ratatui::Frame;
-use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
+use ratatui::crossterm::event::{
+    Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers,
+};
 use tui_textarea::Input;
 
 use crate::app::{App, AppContext, AppInputMode, AppPage, TranslationContext, TranslationMode};
 use crate::storage::Store;
 use crate::ui::{
     render_add_phrase, render_edit_dictionary_menu, render_how_many_will_translate,
-    render_main_menu, render_placeholder_page, render_translate_menu, render_translate_word,
+    render_main_menu, render_phrase_browser, render_placeholder_page, render_translate_menu,
+    render_translate_word,
 };
 
 mod add_phrase;
+mod phrase_browser;
 
 type PageRenderer = fn(&mut AppContext, &Store, &mut Frame);
 
@@ -35,8 +39,9 @@ impl Tui {
             AppPage::DoTranslate => (render_translate_word, "render_translate_word"),
             AppPage::EditDictionaryMenu => {
                 (render_edit_dictionary_menu, "render_edit_dictionary_menu")
-            },
+            }
             AppPage::AddPhrase => (render_add_phrase, "render_add_phrase"),
+            AppPage::EditPhraseBrowser => (render_phrase_browser, "render_phrase_browser"),
             _ => (render_placeholder_page, "render_placeholder_page"),
         };
         tracing::debug!(
@@ -51,41 +56,49 @@ impl Tui {
     }
 
     fn handle_event(app: &mut App) -> Result<()> {
-        if app.context.current_page == AppPage::AddPhrase {
-            let key = app.events.next()?;
-            add_phrase::handle_key(&mut app.context, &mut app.store, key);
+        let Event::Key(key) = app.events.next()? else {
+            // A resize wakes the loop so the next draw recalculates the layout.
             return Ok(());
+        };
+        match app.context.current_page {
+            AppPage::AddPhrase => {
+                add_phrase::handle_key(&mut app.context, &mut app.store, key);
+                return Ok(());
+            }
+            AppPage::EditPhraseBrowser => {
+                phrase_browser::handle_key(&mut app.context, &app.store, key);
+                return Ok(());
+            }
+            _ => {}
         }
         tracing::debug!(
             input_mode = ?app.context.input_mode,
             "Handling event"
         );
         match app.context.input_mode {
-            AppInputMode::Key => Self::handle_key_event(app)?,
-            AppInputMode::Text => Self::handle_input_text(app)?,
+            AppInputMode::Key => Self::handle_key_event(app, key),
+            AppInputMode::Text => Self::handle_input_text(app, key),
         }
         Ok(())
     }
 
-    fn handle_input_text(app: &mut App) -> Result<()> {
+    fn handle_input_text(app: &mut App, key: KeyEvent) {
         // TODO: change from if let to match
         if let AppPage::QuestionHowMuchWords = app.context.current_page {
-            Self::handle_press_key_event_on_question_how_much_words(app, app.events.next()?)
+            Self::handle_press_key_event_on_question_how_much_words(app, key)
         }
-        Ok(())
     }
 
-    fn handle_key_event(app: &mut App) -> Result<()> {
+    fn handle_key_event(app: &mut App, key: KeyEvent) {
         if let KeyEvent {
             code,
             modifiers,
             kind: KeyEventKind::Press,
             state,
-        } = app.events.next()?
+        } = key
         {
             Self::handle_press_key_event(app, code, modifiers, state);
         };
-        Ok(())
     }
 
     fn handle_press_key_event(
@@ -105,7 +118,12 @@ impl Tui {
             AppPage::EditDictionaryMenu => {
                 Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
             }
-            AppPage::EditPhraseBrowser | AppPage::SettingsMenu if code == KeyCode::Esc => {
+            AppPage::EditPhraseField if code == KeyCode::Esc => {
+                app.context.edit_phrase_state.editing_phrase = None;
+                app.context.current_page = AppPage::EditPhraseBrowser;
+                app.context.input_mode = AppInputMode::Key;
+            }
+            AppPage::SettingsMenu if code == KeyCode::Esc => {
                 // TODO: Temporary navigation until these pages are implemented.
                 app.context.current_page = AppPage::EditDictionaryMenu;
             }
@@ -215,7 +233,10 @@ impl Tui {
                         add_phrase::start(&mut app.context, &app.store);
                         return;
                     }
-                    1 => AppPage::EditPhraseBrowser,
+                    1 => {
+                        phrase_browser::start(&mut app.context, &app.store);
+                        return;
+                    }
                     2 => AppPage::SettingsMenu,
                     _ => return,
                 };

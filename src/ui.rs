@@ -6,8 +6,10 @@ use ratatui::{
 };
 
 mod add_phrase;
+mod edit_phrase;
 mod phrase_browser;
 pub use add_phrase::render_add_phrase;
+pub use edit_phrase::render_edit_phrase;
 pub use phrase_browser::render_phrase_browser;
 
 use crate::{

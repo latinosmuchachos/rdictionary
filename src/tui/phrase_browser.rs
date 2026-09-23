@@ -1,8 +1,8 @@
-use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use tui_textarea::{CursorMove, Input, TextArea};
+use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
+use tui_textarea::Input;
 
 use crate::{
-    app::{AppContext, AppInputMode, AppPage, EditPhraseState, EditPhraseStep},
+    app::{AppContext, AppInputMode, AppPage, EditPhraseState},
     storage::Store,
 };
 
@@ -52,14 +52,7 @@ pub fn handle_key(context: &mut AppContext, store: &Store, key: KeyEvent) {
                     .selected_phrase_index()
                     .and_then(|index| store.phrases.get(index))
                 {
-                    state.editing_phrase = Some(phrase.clone());
-                    state.original_field = TextArea::from([phrase.original_text.clone()]);
-                    state.translation_field = TextArea::from([phrase.translation_text.clone()]);
-                    state.original_field.move_cursor(CursorMove::End);
-                    state.translation_field.move_cursor(CursorMove::End);
-                    state.edit_step = EditPhraseStep::SelectField;
-                    state.selected_field = 0;
-                    state.confirm_selected = false;
+                    state.start_editing(phrase);
                     context.current_page = AppPage::EditPhraseField;
                     tracing::debug!(phrase_id = phrase.id, "Selected phrase for editing");
                 }
@@ -68,7 +61,7 @@ pub fn handle_key(context: &mut AppContext, store: &Store, key: KeyEvent) {
         }
     }
 
-    context.input_mode = if browser.search_mode {
+    context.input_mode = if state.browser.search_mode {
         AppInputMode::Text
     } else {
         AppInputMode::Key

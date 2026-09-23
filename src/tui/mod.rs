@@ -8,12 +8,13 @@ use tui_textarea::Input;
 use crate::app::{App, AppContext, AppInputMode, AppPage, TranslationContext, TranslationMode};
 use crate::storage::Store;
 use crate::ui::{
-    render_add_phrase, render_edit_dictionary_menu, render_how_many_will_translate,
-    render_main_menu, render_phrase_browser, render_placeholder_page, render_translate_menu,
-    render_translate_word,
+    render_add_phrase, render_edit_dictionary_menu, render_edit_phrase,
+    render_how_many_will_translate, render_main_menu, render_phrase_browser,
+    render_placeholder_page, render_translate_menu, render_translate_word,
 };
 
 mod add_phrase;
+mod edit_phrase;
 mod phrase_browser;
 
 type PageRenderer = fn(&mut AppContext, &Store, &mut Frame);
@@ -42,6 +43,7 @@ impl Tui {
             }
             AppPage::AddPhrase => (render_add_phrase, "render_add_phrase"),
             AppPage::EditPhraseBrowser => (render_phrase_browser, "render_phrase_browser"),
+            AppPage::EditPhraseField => (render_edit_phrase, "render_edit_phrase"),
             _ => (render_placeholder_page, "render_placeholder_page"),
         };
         tracing::debug!(
@@ -67,6 +69,10 @@ impl Tui {
             }
             AppPage::EditPhraseBrowser => {
                 phrase_browser::handle_key(&mut app.context, &app.store, key);
+                return Ok(());
+            }
+            AppPage::EditPhraseField => {
+                edit_phrase::handle_key(&mut app.context, key);
                 return Ok(());
             }
             _ => {}
@@ -118,10 +124,9 @@ impl Tui {
             AppPage::EditDictionaryMenu => {
                 Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
             }
-            AppPage::EditPhraseField if code == KeyCode::Esc => {
-                app.context.edit_phrase_state.editing_phrase = None;
-                app.context.current_page = AppPage::EditPhraseBrowser;
-                app.context.input_mode = AppInputMode::Key;
+            AppPage::EditPhraseConfirm if code == KeyCode::Esc => {
+                app.context.current_page = AppPage::EditPhraseField;
+                app.context.input_mode = AppInputMode::Text;
             }
             AppPage::SettingsMenu if code == KeyCode::Esc => {
                 // TODO: Temporary navigation until these pages are implemented.

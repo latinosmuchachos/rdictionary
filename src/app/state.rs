@@ -5,9 +5,9 @@ use ratatui::{
     widgets::{Block, BorderType, Borders},
 };
 use regex::Regex;
-use tui_textarea::TextArea;
+use tui_textarea::{CursorMove, TextArea};
 
-use crate::{models::Phrase, storage::Store};
+use crate::{menu::EDIT_PHRASE_FIELD_ITEMS, models::Phrase, storage::Store};
 
 use super::TranslationMode;
 
@@ -232,11 +232,12 @@ pub enum EditPhraseStep {
 pub struct EditPhraseState {
     pub browser: PhraseBrowserState,
     pub edit_step: EditPhraseStep,
-    pub selected_field: usize,
+    pub field_menu: MenuState,
     pub editing_phrase: Option<Phrase>,
     pub original_field: TextArea<'static>,
     pub translation_field: TextArea<'static>,
     pub confirm_selected: bool,
+    pub error: Option<String>,
 }
 
 impl EditPhraseState {
@@ -244,12 +245,39 @@ impl EditPhraseState {
         Self {
             browser: PhraseBrowserState::new(phrase_count),
             edit_step: EditPhraseStep::SelectField,
-            selected_field: 0,
+            field_menu: MenuState::new(EDIT_PHRASE_FIELD_ITEMS.len()),
             editing_phrase: None,
             original_field: TextArea::default(),
             translation_field: TextArea::default(),
             confirm_selected: false,
+            error: None,
         }
+    }
+
+    pub fn start_editing(&mut self, phrase: &Phrase) {
+        self.editing_phrase = Some(phrase.clone());
+        self.original_field = Self::make_input(&phrase.original_text, "Original");
+        self.translation_field = Self::make_input(&phrase.translation_text, "Translation");
+        self.edit_step = EditPhraseStep::SelectField;
+        self.field_menu.selected = 0;
+        self.confirm_selected = false;
+        self.error = None;
+    }
+
+    fn make_input(text: &str, title: &'static str) -> TextArea<'static> {
+        let mut input = TextArea::from(text.split('\n'));
+        input.set_block(
+            Block::default()
+                .title(title)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Yellow)),
+        );
+        input.set_cursor_line_style(Style::default());
+        input.set_cursor_style(Style::default().add_modifier(Modifier::REVERSED));
+        input.move_cursor(CursorMove::Bottom);
+        input.move_cursor(CursorMove::End);
+        input
     }
 }
 

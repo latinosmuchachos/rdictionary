@@ -1,17 +1,19 @@
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Layout},
+    layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph},
 };
 
+mod add_phrase;
+pub use add_phrase::render_add_phrase;
+
 use crate::{
-    app::AppContext,
-    menu::{ MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS, EDIT_DICTIONARY_MENU_ITEMS }
+    app::AppContext, menu::{EDIT_DICTIONARY_MENU_ITEMS, MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS}, storage::Store,
 };
 
 // TODO: Temporary renderer for pages implemented in later steps.
-pub fn render_placeholder_page(app_context: &mut AppContext, frame: &mut Frame) {
+pub fn render_placeholder_page(app_context: &mut AppContext, _store: &Store, frame: &mut Frame) {
     frame.render_widget(
         Paragraph::new("This page is not implemented yet.\nEsc - back")
             .block(
@@ -26,23 +28,26 @@ pub fn render_placeholder_page(app_context: &mut AppContext, frame: &mut Frame) 
     );
 }
 
-fn render_menu(
+fn render_menu(frame: &mut Frame, title: &str, hint: &str, items: &[&str], selected: usize) {
+    let area = frame.area();
+    render_menu_in_area(frame, area, title, hint, items, selected);
+}
+
+fn render_menu_in_area(
     frame: &mut Frame,
+    area: Rect,
     title: &str,
     hint: &str,
     items: &[&str],
     selected: usize,
 ) {
-    // Создать список и настроить его оформление.
-    // Подготовить ListState с выбранным индексом.
-    // Нарисовать список в области frame.
     let menu = List::new(items.iter().copied().map(ListItem::new))
         .block(
             Block::default()
                 .title(title)
                 .title_bottom(hint)
                 .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
+                .border_type(BorderType::Rounded),
         )
         .style(Style::default().fg(Color::Yellow))
         .highlight_style(
@@ -55,41 +60,40 @@ fn render_menu(
 
     let mut state = ListState::default().with_selected(Some(selected));
 
-    frame.render_stateful_widget(menu, frame.area(), &mut state);
-        
+    frame.render_stateful_widget(menu, area, &mut state);
 }
 
-pub fn render_main_menu(app_context: &mut AppContext, frame: &mut Frame) {
+pub fn render_main_menu(app_context: &mut AppContext, _store: &Store, frame: &mut Frame) {
     render_menu(
-        frame, 
-        "Main Menu", 
-        " Up/Down - select, Enter - open, Esc - back ", 
-        &MAIN_MENU_ITEMS, 
-        app_context.main_menu_state.selected
+        frame,
+        "Main Menu",
+        " Up/Down - select, Enter - open, Esc - back ",
+        &MAIN_MENU_ITEMS,
+        app_context.main_menu_state.selected,
     );
 }
 
-pub fn render_edit_dictionary_menu(app_context: &mut AppContext, frame: &mut Frame) {
+pub fn render_edit_dictionary_menu(app_context: &mut AppContext, _store: &Store, frame: &mut Frame) {
     render_menu(
-        frame, 
-        "Edit Dictionary Menu", 
-        " Up/Down - select, Enter - open, Esc - back ", 
-        &EDIT_DICTIONARY_MENU_ITEMS, 
-        app_context.edit_dictionary_menu_state.selected
+        frame,
+        "Edit Dictionary Menu",
+        " Up/Down - select, Enter - open, Esc - back ",
+        &EDIT_DICTIONARY_MENU_ITEMS,
+        app_context.edit_dictionary_menu_state.selected,
     );
 }
 
-pub fn render_translate_menu(app_context: &mut AppContext, frame: &mut Frame) {
+pub fn render_translate_menu(app_context: &mut AppContext, _store: &Store, frame: &mut Frame) {
     render_menu(
-        frame, 
-        "Translate Menu", 
-        " Up/Down - select, Enter - open, Esc - back ", 
-        &TRANSLATE_MENU_ITEMS, 
-        app_context.translate_menu_state.selected
+        frame,
+        "Translate Menu",
+        " Up/Down - select, Enter - open, Esc - back ",
+        &TRANSLATE_MENU_ITEMS,
+        app_context.translate_menu_state.selected,
     );
 }
 
-pub fn render_how_many_will_translate(app_context: &mut AppContext, frame: &mut Frame) {
+pub fn render_how_many_will_translate(app_context: &mut AppContext, _store: &Store, frame: &mut Frame) {
     let outer = Block::default()
         .title(format!(" {:?} words ", app_context.translation_mode))
         .title_alignment(Alignment::Center)
@@ -128,7 +132,7 @@ pub fn render_how_many_will_translate(app_context: &mut AppContext, frame: &mut 
     }
 }
 
-pub fn render_translate_word(app_context: &mut AppContext, frame: &mut Frame) {
+pub fn render_translate_word(app_context: &mut AppContext, _store: &Store, frame: &mut Frame) {
     if let Some(translation_context) = app_context.translation_context {
         let msg = format!(
             "You should translate {} {:?} words!",

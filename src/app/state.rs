@@ -1,14 +1,16 @@
 use core::fmt;
 
+use ratatui::{
+    style::{Color, Modifier, Style},
+    widgets::{Block, BorderType, Borders},
+};
 use tui_textarea::TextArea;
 
-use crate::models::Phrase;
+use crate::{models::Phrase, storage::Store};
 
 use super::TranslationMode;
 
-use crate::menu::{ MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS, EDIT_DICTIONARY_MENU_ITEMS};
-
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MenuState {
     pub selected: usize,
     pub items_count: usize,
@@ -33,7 +35,7 @@ impl MenuState {
     }
 
     pub fn select_next(&mut self) {
-        self.selected = (self.selected + 1) % MAIN_MENU_ITEMS.len();
+        self.selected = (self.selected + 1) % self.items_count;
     }
 }
 
@@ -41,8 +43,7 @@ impl MenuState {
 pub enum AddPhraseStep {
     SelectLanguages,
     EnterOriginal,
-    EnterTranslation,
-    AfterSave,
+    EnterTranslation
 }
 
 #[derive(Debug)]
@@ -50,21 +51,51 @@ pub struct AddPhraseState {
     pub step: AddPhraseStep,
     pub selected_original_lang_idx: usize,
     pub selected_translation_lang_idx: usize,
+    pub selected_language_field: usize,
     pub original_text: TextArea<'static>,
     pub translation_text: TextArea<'static>,
-    pub after_save_selected: usize,
+    pub error: Option<String>,
 }
 
 impl AddPhraseState {
+    pub fn from_store(store: &Store) -> Self {
+        let original = store
+            .languages
+            .iter()
+            .position(|language| language.id == store.settings.default_original_language_id)
+            .unwrap_or(0);
+        let translation = store
+            .languages
+            .iter()
+            .position(|language| language.id == store.settings.default_translation_language_id)
+            .unwrap_or(0);
+        Self::new(original, translation)
+    }
+
     pub fn new(selected_original_lang_idx: usize, selected_translation_lang_idx: usize) -> Self {
         Self {
             step: AddPhraseStep::SelectLanguages,
             selected_original_lang_idx,
             selected_translation_lang_idx,
-            original_text: TextArea::default(),
-            translation_text: TextArea::default(),
-            after_save_selected: 0,
+            selected_language_field: 0,
+            original_text: Self::make_input("Original phrase"),
+            translation_text: Self::make_input("Translation"),
+            error: None,
         }
+    }
+
+    fn make_input(title: &'static str) -> TextArea<'static> {
+        let mut input = TextArea::default();
+        input.set_block(
+            Block::default()
+                .title(title)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Yellow)),
+        );
+        input.set_cursor_line_style(Style::default());
+        input.set_cursor_style(Style::default().add_modifier(Modifier::REVERSED));
+        input
     }
 }
 
@@ -162,7 +193,18 @@ impl fmt::Debug for TranslationSession {
 mod tests {
     use crate::menu::EDIT_DICTIONARY_MENU_ITEMS;
 
-use super::MenuState;
+    use super::MenuState;
+
+    #[test]
+    fn menu_navigation_uses_its_own_item_count() {
+        let mut state = MenuState::new(2);
+        state.select_next();
+        assert_eq!(state.selected, 1);
+        state.select_next();
+        assert_eq!(state.selected, 0);
+        state.select_previous();
+        assert_eq!(state.selected, 1);
+    }
 
     #[test]
     fn edit_dictionary_menu_navigation_wraps() {

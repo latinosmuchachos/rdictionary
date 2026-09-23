@@ -20,10 +20,13 @@ use tui_textarea::TextArea;
 
 mod state;
 
-pub use state::{AddPhraseState, EditPhraseState, TranslationSession};
+pub use state::{AddPhraseState, AddPhraseStep, EditPhraseState, TranslationSession};
 
 use crate::{
-    app::state::MenuState, events::EventHandler, menu::{EDIT_DICTIONARY_MENU_ITEMS, MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS}, storage::{Store, get_data_dir},
+    app::state::MenuState,
+    events::EventHandler,
+    menu::{EDIT_DICTIONARY_MENU_ITEMS, MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS},
+    storage::{Store, get_data_dir},
 };
 
 pub type CrosstermTerminal = Terminal<CrosstermBackend<Stderr>>;
@@ -88,25 +91,17 @@ impl fmt::Debug for AppContext {
             .field("translation_context", &self.translation_context)
             .field("main_menu_state", &self.main_menu_state)
             .field("translate_menu_state", &self.translate_menu_state)
-            .field("edit_dictionary_menu_state", &self.edit_dictionary_menu_state)
+            .field(
+                "edit_dictionary_menu_state",
+                &self.edit_dictionary_menu_state,
+            )
             .field("translation_session", &self.translation_session)
             .finish_non_exhaustive()
     }
 }
 
 impl AppContext {
-    fn new(store: &Store) -> Self {
-        let original_language_idx = store
-            .languages
-            .iter()
-            .position(|language| language.id == store.settings.default_original_language_id)
-            .unwrap_or(0);
-        let translation_language_idx = store
-            .languages
-            .iter()
-            .position(|language| language.id == store.settings.default_translation_language_id)
-            .unwrap_or(0);
-
+    pub fn new(store: &Store) -> Self {
         Self {
             should_quit: false,
             input_mode: AppInputMode::Key,
@@ -117,7 +112,7 @@ impl AppContext {
             main_menu_state: MenuState::new(MAIN_MENU_ITEMS.len()),
             translate_menu_state: MenuState::new(TRANSLATE_MENU_ITEMS.len()),
             edit_dictionary_menu_state: MenuState::new(EDIT_DICTIONARY_MENU_ITEMS.len()),
-            add_phrase_state: AddPhraseState::new(original_language_idx, translation_language_idx),
+            add_phrase_state: AddPhraseState::from_store(store),
             edit_phrase_state: EditPhraseState::new(store.phrases.len()),
             translation_session: None,
         }

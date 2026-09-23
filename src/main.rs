@@ -35,11 +35,9 @@ fn main() -> Result<()> {
 }
 
 fn log_settings() -> WorkerGuard {
-    let file_appender =
-        tracing_appender::rolling::daily("logs", "rdictionary.log");
+    let file_appender = tracing_appender::rolling::daily("logs", "rdictionary.log");
 
-    let (non_blocking, guard) =
-        tracing_appender::non_blocking(file_appender);
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
     let file_filter = tracing_subscriber::EnvFilter::from_default_env()
         .add_directive("rdictionary=debug".parse().unwrap());
@@ -51,9 +49,7 @@ fn log_settings() -> WorkerGuard {
         .with_line_number(true)
         .with_filter(file_filter);
 
-    tracing_subscriber::registry()
-        .with(file_layer)
-        .init();
+    tracing_subscriber::registry().with(file_layer).init();
 
     guard
 }

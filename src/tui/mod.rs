@@ -4,15 +4,19 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, 
 use tui_textarea::Input;
 
 use crate::app::{App, AppContext, AppInputMode, AppPage, TranslationContext, TranslationMode};
+use crate::storage::Store;
 use crate::ui::{
-    render_edit_dictionary_menu, render_how_many_will_translate, render_main_menu,
-    render_placeholder_page, render_translate_menu, render_translate_word,
+    render_add_phrase, render_edit_dictionary_menu, render_how_many_will_translate,
+    render_main_menu, render_placeholder_page, render_translate_menu, render_translate_word,
 };
 
-type PageRenderer = fn(&mut AppContext, &mut Frame);
+mod add_phrase;
+
+type PageRenderer = fn(&mut AppContext, &Store, &mut Frame);
 
 pub struct Tui {}
 
+// TODO: разделить handlers по категориям и разным файлам (как это сделано с app_phrase)
 impl Tui {
     pub fn tick(app: &mut App) -> Result<()> {
         Self::draw_current_page(app)?;
@@ -24,10 +28,16 @@ impl Tui {
         let (ui_render_func, renderer): (PageRenderer, &str) = match app.context.current_page {
             AppPage::MainMenu => (render_main_menu, "render_main_menu"),
             AppPage::TranslationMenu => (render_translate_menu, "render_translate_menu"),
-            AppPage::QuestionHowMuchWords => (render_how_many_will_translate, "render_how_many_will_translate"),
+            AppPage::QuestionHowMuchWords => (
+                render_how_many_will_translate,
+                "render_how_many_will_translate",
+            ),
             AppPage::DoTranslate => (render_translate_word, "render_translate_word"),
-            AppPage::EditDictionaryMenu => (render_edit_dictionary_menu, "render_edit_dictionary_menu"),
-            _ => (render_placeholder_page, "render_placeholder_page")
+            AppPage::EditDictionaryMenu => {
+                (render_edit_dictionary_menu, "render_edit_dictionary_menu")
+            },
+            AppPage::AddPhrase => (render_add_phrase, "render_add_phrase"),
+            _ => (render_placeholder_page, "render_placeholder_page"),
         };
         tracing::debug!(
             renderer = renderer,
@@ -35,12 +45,17 @@ impl Tui {
             "Drawing page"
         );
         app.terminal
-            .draw(|frame| ui_render_func(&mut app.context, frame))?;
+            .draw(|frame| ui_render_func(&mut app.context, &app.store, frame))?;
 
         Ok(())
     }
 
     fn handle_event(app: &mut App) -> Result<()> {
+        if app.context.current_page == AppPage::AddPhrase {
+            let key = app.events.next()?;
+            add_phrase::handle_key(&mut app.context, &mut app.store, key);
+            return Ok(());
+        }
         tracing::debug!(
             input_mode = ?app.context.input_mode,
             "Handling event"
@@ -90,9 +105,7 @@ impl Tui {
             AppPage::EditDictionaryMenu => {
                 Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
             }
-            AppPage::AddPhrase | AppPage::EditPhraseBrowser | AppPage::SettingsMenu
-                if code == KeyCode::Esc =>
-            {
+            AppPage::EditPhraseBrowser | AppPage::SettingsMenu if code == KeyCode::Esc => {
                 // TODO: Temporary navigation until these pages are implemented.
                 app.context.current_page = AppPage::EditDictionaryMenu;
             }
@@ -198,7 +211,10 @@ impl Tui {
             KeyCode::Down => app.context.edit_dictionary_menu_state.select_next(),
             KeyCode::Enter => {
                 app.context.current_page = match app.context.edit_dictionary_menu_state.selected {
-                    0 => AppPage::AddPhrase,
+                    0 => {
+                        add_phrase::start(&mut app.context, &app.store);
+                        return;
+                    }
                     1 => AppPage::EditPhraseBrowser,
                     2 => AppPage::SettingsMenu,
                     _ => return,

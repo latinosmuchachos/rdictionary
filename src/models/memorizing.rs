@@ -20,7 +20,8 @@ impl MemorizingStep {
 
     pub fn prev_clamped(self) -> Self {
         match self {
-            Self::New | Self::Daily | Self::Weekly => Self::Daily,
+            Self::New => Self::New,
+            Self::Daily | Self::Weekly => Self::Daily,
             Self::Monthly => Self::Weekly,
         }
     }

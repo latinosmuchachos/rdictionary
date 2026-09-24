@@ -1,17 +1,15 @@
-use color_eyre::Result;
-use ratatui::Frame;
-use ratatui::crossterm::event::{
-    Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers,
-};
-use tui_textarea::Input;
-
-use crate::app::{App, AppContext, AppInputMode, AppPage, TranslationContext, TranslationMode};
+use crate::app::{App, AppContext, AppPage};
 use crate::storage::Store;
 use crate::ui::{
     render_add_phrase, render_edit_dictionary_menu, render_edit_phrase, render_edit_phrase_confirm,
     render_how_many_will_translate, render_main_menu, render_phrase_browser,
-    render_placeholder_page, render_settings_attempts, render_settings_languages,
-    render_settings_menu, render_translate_menu, render_translate_word,
+    render_settings_attempts, render_settings_languages, render_settings_menu,
+    render_translate_menu, render_translate_word, render_translation_result,
+};
+use color_eyre::Result;
+use ratatui::Frame;
+use ratatui::crossterm::event::{
+    Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers,
 };
 
 mod add_phrase;
@@ -19,6 +17,7 @@ mod edit_phrase;
 mod edit_phrase_confirm;
 mod phrase_browser;
 mod settings;
+mod translation;
 
 type PageRenderer = fn(&mut AppContext, &Store, &mut Frame);
 
@@ -41,6 +40,7 @@ impl Tui {
                 "render_how_many_will_translate",
             ),
             AppPage::DoTranslate => (render_translate_word, "render_translate_word"),
+            AppPage::TranslationResult => (render_translation_result, "render_translation_result"),
             AppPage::EditDictionaryMenu => {
                 (render_edit_dictionary_menu, "render_edit_dictionary_menu")
             }
@@ -53,7 +53,6 @@ impl Tui {
             AppPage::SettingsMenu => (render_settings_menu, "render_settings_menu"),
             AppPage::SettingsLanguages => (render_settings_languages, "render_settings_languages"),
             AppPage::SettingsAttempts => (render_settings_attempts, "render_settings_attempts"),
-            _ => (render_placeholder_page, "render_placeholder_page"),
         };
         tracing::debug!(
             renderer = renderer,
@@ -72,6 +71,13 @@ impl Tui {
             return Ok(());
         };
         match app.context.current_page {
+            AppPage::TranslationMenu
+            | AppPage::QuestionHowMuchWords
+            | AppPage::DoTranslate
+            | AppPage::TranslationResult => {
+                translation::handle_key(&mut app.context, &mut app.store, key);
+                return Ok(());
+            }
             AppPage::AddPhrase => {
                 add_phrase::handle_key(&mut app.context, &mut app.store, key);
                 return Ok(());
@@ -98,18 +104,8 @@ impl Tui {
             input_mode = ?app.context.input_mode,
             "Handling event"
         );
-        match app.context.input_mode {
-            AppInputMode::Key => Self::handle_key_event(app, key),
-            AppInputMode::Text => Self::handle_input_text(app, key),
-        }
+        Self::handle_key_event(app, key);
         Ok(())
-    }
-
-    fn handle_input_text(app: &mut App, key: KeyEvent) {
-        // TODO: change from if let to match
-        if let AppPage::QuestionHowMuchWords = app.context.current_page {
-            Self::handle_press_key_event_on_question_how_much_words(app, key)
-        }
     }
 
     fn handle_key_event(app: &mut App, key: KeyEvent) {
@@ -136,8 +132,6 @@ impl Tui {
         );
         match app.context.current_page {
             AppPage::MainMenu => Self::handle_press_key_event_on_main_menu(app, code),
-            AppPage::TranslationMenu => Self::handle_press_key_event_on_translation_menu(app, code),
-            AppPage::DoTranslate => Self::handle_press_key_event_on_do_translate_page(app, code),
             AppPage::EditDictionaryMenu => {
                 Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
             }
@@ -162,74 +156,6 @@ impl Tui {
                 };
             }
             _ => {}
-        }
-    }
-
-    fn handle_press_key_event_on_translation_menu(app: &mut App, code: KeyCode) {
-        tracing::debug!(
-            code = ?code,
-            "Handle press key event on translation menu"
-        );
-        match code {
-            KeyCode::Up => app.context.translate_menu_state.select_previous(),
-            KeyCode::Down => app.context.translate_menu_state.select_next(),
-            KeyCode::Enter => {
-                match app.context.main_menu_state.selected {
-                    0 => {
-                        app.context.translation_mode = Some(TranslationMode::Daily);
-                        app.context.current_page = AppPage::QuestionHowMuchWords;
-                        app.context.input_mode = AppInputMode::Text;
-                    }
-                    1 => {
-                        app.context.translation_mode = Some(TranslationMode::Weekly);
-                        app.context.current_page = AppPage::QuestionHowMuchWords;
-                        app.context.input_mode = AppInputMode::Text;
-                    }
-                    2 => {
-                        app.context.translation_mode = Some(TranslationMode::Monthly);
-                        app.context.current_page = AppPage::QuestionHowMuchWords;
-                        app.context.input_mode = AppInputMode::Text;
-                    }
-                    _ => {}
-                };
-            }
-            KeyCode::Esc => app.context.current_page = AppPage::MainMenu,
-            _ => {}
-        }
-    }
-
-    fn handle_press_key_event_on_question_how_much_words(app: &mut App, key: KeyEvent) {
-        match key.code {
-            KeyCode::Enter => {
-                if let Some(n) = app.context.parsed_count_from_input() {
-                    app.context.translation_context =
-                        Some(TranslationContext { expected_count: n });
-                    app.context.end_input(AppPage::DoTranslate);
-                }
-            }
-            KeyCode::Esc => {
-                app.context.clear_input();
-                app.context.end_input(AppPage::TranslationMenu);
-            }
-            KeyCode::Char(c) if !c.is_ascii_digit() => {}
-            KeyCode::Char(_) if app.context.input_text.lines()[0].chars().count() >= 4 => {}
-            _ => {
-                app.context.input_text.input(Input::from(key));
-            }
-        }
-    }
-
-    fn handle_press_key_event_on_do_translate_page(app: &mut App, code: KeyCode) {
-        tracing::debug!(
-            code = ?code,
-            "Handle press key event on do translate page"
-        );
-        match code {
-            KeyCode::Esc => {
-                app.context.current_page = AppPage::TranslationMenu;
-                app.context.translation_context = Option::None;
-            }
-            _ => {} // TODO: сделать ввод слов
         }
     }
 

@@ -1,5 +1,3 @@
-use core::fmt;
-
 use ratatui::{
     style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders},
@@ -12,8 +10,6 @@ use crate::{
     models::Phrase,
     storage::Store,
 };
-
-use super::TranslationMode;
 
 #[derive(Debug)]
 pub struct MenuState {
@@ -345,39 +341,6 @@ impl SettingsAttemptsState {
             .parse::<u8>()
             .ok()
             .filter(|attempts| *attempts > 0)
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct SessionStats {
-    pub correct: u32,
-    pub incorrect: u32,
-    pub leveled_up: u32,
-    pub leveled_down: u32,
-    pub same_level: u32,
-}
-
-pub struct TranslationSession {
-    pub mode: TranslationMode,
-    pub queue: Vec<Phrase>,
-    pub current_idx: usize,
-    pub unlimited: bool,
-    pub stats: SessionStats,
-    pub input: TextArea<'static>,
-    pub last_answer_correct: Option<bool>,
-}
-
-impl fmt::Debug for TranslationSession {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TranslationSession")
-            .field("mode", &self.mode)
-            .field("current_idx", &self.current_idx)
-            .field("count_in_queue", &self.queue.len())
-            .field("unlimited", &self.unlimited)
-            .field("stats", &self.stats)
-            .field("input", &self.input)
-            .field("last_answer_correct", &self.last_answer_correct)
-            .finish_non_exhaustive()
     }
 }
 

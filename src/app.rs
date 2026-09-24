@@ -19,11 +19,13 @@ use ratatui::{
 use tui_textarea::TextArea;
 
 mod state;
+mod translation;
 
 pub use state::{
     AddPhraseState, AddPhraseStep, EditPhraseState, EditPhraseStep, SettingsAttemptsState,
-    SettingsLanguagesState, TranslationSession,
+    SettingsLanguagesState,
 };
+pub use translation::{TranslationMode, TranslationSession};
 
 use crate::{
     app::state::MenuState,
@@ -40,18 +42,6 @@ pub type CrosstermTerminal = Terminal<CrosstermBackend<Stderr>>;
 pub enum AppInputMode {
     Key,
     Text,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct TranslationContext {
-    pub expected_count: u8,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TranslationMode {
-    Daily,
-    Weekly,
-    Monthly,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,10 +64,8 @@ pub enum AppPage {
 pub struct AppContext {
     pub should_quit: bool,
     pub input_mode: AppInputMode,
-    pub translation_mode: Option<TranslationMode>,
     pub current_page: AppPage,
     pub input_text: TextArea<'static>,
-    pub translation_context: Option<TranslationContext>,
     pub main_menu_state: MenuState,
     pub translate_menu_state: MenuState,
     pub edit_dictionary_menu_state: MenuState,
@@ -94,9 +82,7 @@ impl fmt::Debug for AppContext {
         f.debug_struct("AppContext")
             .field("should_quit", &self.should_quit)
             .field("input_mode", &self.input_mode)
-            .field("translation_mode", &self.translation_mode)
             .field("current_page", &self.current_page)
-            .field("translation_context", &self.translation_context)
             .field("main_menu_state", &self.main_menu_state)
             .field("translate_menu_state", &self.translate_menu_state)
             .field(
@@ -114,10 +100,8 @@ impl AppContext {
         Self {
             should_quit: false,
             input_mode: AppInputMode::Key,
-            translation_mode: None,
             current_page: AppPage::MainMenu,
             input_text: Self::make_words_input(),
-            translation_context: None,
             main_menu_state: MenuState::new(MAIN_MENU_ITEMS.len()),
             translate_menu_state: MenuState::new(TRANSLATE_MENU_ITEMS.len()),
             edit_dictionary_menu_state: MenuState::new(EDIT_DICTIONARY_MENU_ITEMS.len()),
@@ -154,14 +138,7 @@ impl AppContext {
     }
 
     pub fn clear_input(&mut self) {
-        self.input_text.select_all();
-        self.input_text.cut();
-    }
-
-    pub fn end_input(&mut self, next_page: AppPage) {
-        self.current_page = next_page;
-        self.input_mode = AppInputMode::Key;
-        self.clear_input();
+        self.input_text = Self::make_words_input();
     }
 }
 

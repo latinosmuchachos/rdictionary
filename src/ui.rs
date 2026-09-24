@@ -9,10 +9,12 @@ mod add_phrase;
 mod edit_phrase;
 mod edit_phrase_confirm;
 mod phrase_browser;
+mod settings;
 pub use add_phrase::render_add_phrase;
 pub use edit_phrase::render_edit_phrase;
 pub use edit_phrase_confirm::render_edit_phrase_confirm;
 pub use phrase_browser::render_phrase_browser;
+pub use settings::{render_settings_attempts, render_settings_languages, render_settings_menu};
 
 use crate::{
     app::AppContext,

@@ -305,6 +305,50 @@ impl EditPhraseState {
 }
 
 #[derive(Debug, Default)]
+pub struct SettingsLanguagesState {
+    pub selected_field: usize,
+    pub selecting_language: bool,
+    pub lang_list_selected: usize,
+    pub error: Option<String>,
+    pub saved: bool,
+}
+
+#[derive(Debug)]
+pub struct SettingsAttemptsState {
+    pub input: TextArea<'static>,
+    pub error: Option<String>,
+    pub saved: bool,
+}
+
+impl SettingsAttemptsState {
+    pub fn from_store(store: &Store) -> Self {
+        let mut input = TextArea::from([store.settings.needed_attempts.to_string()]);
+        input.set_block(
+            Block::default()
+                .title(" Consecutive correct answers (1-255) ")
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Yellow)),
+        );
+        input.set_cursor_line_style(Style::default());
+        input.set_cursor_style(Style::default().add_modifier(Modifier::REVERSED));
+        input.move_cursor(CursorMove::End);
+        Self {
+            input,
+            error: None,
+            saved: false,
+        }
+    }
+
+    pub fn parsed_attempts(&self) -> Option<u8> {
+        self.input.lines()[0]
+            .parse::<u8>()
+            .ok()
+            .filter(|attempts| *attempts > 0)
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct SessionStats {
     pub correct: u32,
     pub incorrect: u32,

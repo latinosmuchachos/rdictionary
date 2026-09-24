@@ -58,6 +58,15 @@ impl Store {
         write_json(&self.data_dir.join(SETTINGS_FILE_NAME), &self.settings)
     }
 
+    pub fn update_settings(&mut self, settings: Settings) -> Result<()> {
+        let previous_settings = std::mem::replace(&mut self.settings, settings);
+        if let Err(error) = self.save_settings() {
+            self.settings = previous_settings;
+            return Err(error);
+        }
+        Ok(())
+    }
+
     pub fn add_phrase(
         &mut self,
         original_language_id: u32,

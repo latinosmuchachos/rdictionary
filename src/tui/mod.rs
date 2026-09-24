@@ -10,13 +10,15 @@ use crate::storage::Store;
 use crate::ui::{
     render_add_phrase, render_edit_dictionary_menu, render_edit_phrase, render_edit_phrase_confirm,
     render_how_many_will_translate, render_main_menu, render_phrase_browser,
-    render_placeholder_page, render_translate_menu, render_translate_word,
+    render_placeholder_page, render_settings_attempts, render_settings_languages,
+    render_settings_menu, render_translate_menu, render_translate_word,
 };
 
 mod add_phrase;
 mod edit_phrase;
 mod edit_phrase_confirm;
 mod phrase_browser;
+mod settings;
 
 type PageRenderer = fn(&mut AppContext, &Store, &mut Frame);
 
@@ -48,6 +50,9 @@ impl Tui {
             AppPage::EditPhraseConfirm => {
                 (render_edit_phrase_confirm, "render_edit_phrase_confirm")
             }
+            AppPage::SettingsMenu => (render_settings_menu, "render_settings_menu"),
+            AppPage::SettingsLanguages => (render_settings_languages, "render_settings_languages"),
+            AppPage::SettingsAttempts => (render_settings_attempts, "render_settings_attempts"),
             _ => (render_placeholder_page, "render_placeholder_page"),
         };
         tracing::debug!(
@@ -81,6 +86,10 @@ impl Tui {
             }
             AppPage::EditPhraseConfirm => {
                 edit_phrase_confirm::handle_key(&mut app.context, &mut app.store, key);
+                return Ok(());
+            }
+            AppPage::SettingsMenu | AppPage::SettingsLanguages | AppPage::SettingsAttempts => {
+                settings::handle_key(&mut app.context, &mut app.store, key);
                 return Ok(());
             }
             _ => {}
@@ -131,10 +140,6 @@ impl Tui {
             AppPage::DoTranslate => Self::handle_press_key_event_on_do_translate_page(app, code),
             AppPage::EditDictionaryMenu => {
                 Self::handle_press_key_event_on_edit_dictionary_menu(app, code)
-            }
-            AppPage::SettingsMenu if code == KeyCode::Esc => {
-                // TODO: Temporary navigation until these pages are implemented.
-                app.context.current_page = AppPage::EditDictionaryMenu;
             }
             _ => {}
         };
@@ -236,20 +241,12 @@ impl Tui {
         match code {
             KeyCode::Up => app.context.edit_dictionary_menu_state.select_previous(),
             KeyCode::Down => app.context.edit_dictionary_menu_state.select_next(),
-            KeyCode::Enter => {
-                app.context.current_page = match app.context.edit_dictionary_menu_state.selected {
-                    0 => {
-                        add_phrase::start(&mut app.context, &app.store);
-                        return;
-                    }
-                    1 => {
-                        phrase_browser::start(&mut app.context, &app.store);
-                        return;
-                    }
-                    2 => AppPage::SettingsMenu,
-                    _ => return,
-                };
-            }
+            KeyCode::Enter => match app.context.edit_dictionary_menu_state.selected {
+                0 => add_phrase::start(&mut app.context, &app.store),
+                1 => phrase_browser::start(&mut app.context, &app.store),
+                2 => settings::start(&mut app.context),
+                _ => {}
+            },
             KeyCode::Esc => app.context.current_page = AppPage::MainMenu,
             _ => {}
         }

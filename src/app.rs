@@ -21,13 +21,16 @@ use tui_textarea::TextArea;
 mod state;
 
 pub use state::{
-    AddPhraseState, AddPhraseStep, EditPhraseState, EditPhraseStep, TranslationSession,
+    AddPhraseState, AddPhraseStep, EditPhraseState, EditPhraseStep, SettingsAttemptsState,
+    SettingsLanguagesState, TranslationSession,
 };
 
 use crate::{
     app::state::MenuState,
     events::EventHandler,
-    menu::{EDIT_DICTIONARY_MENU_ITEMS, MAIN_MENU_ITEMS, TRANSLATE_MENU_ITEMS},
+    menu::{
+        EDIT_DICTIONARY_MENU_ITEMS, MAIN_MENU_ITEMS, SETTINGS_MENU_ITEMS, TRANSLATE_MENU_ITEMS,
+    },
     storage::{Store, get_data_dir},
 };
 
@@ -80,6 +83,9 @@ pub struct AppContext {
     pub edit_dictionary_menu_state: MenuState,
     pub add_phrase_state: AddPhraseState,
     pub edit_phrase_state: EditPhraseState,
+    pub settings_menu_state: MenuState,
+    pub settings_languages_state: SettingsLanguagesState,
+    pub settings_attempts_state: SettingsAttemptsState,
     pub translation_session: Option<TranslationSession>,
 }
 
@@ -98,6 +104,7 @@ impl fmt::Debug for AppContext {
                 &self.edit_dictionary_menu_state,
             )
             .field("translation_session", &self.translation_session)
+            .field("settings_menu_state", &self.settings_menu_state)
             .finish_non_exhaustive()
     }
 }
@@ -116,6 +123,9 @@ impl AppContext {
             edit_dictionary_menu_state: MenuState::new(EDIT_DICTIONARY_MENU_ITEMS.len()),
             add_phrase_state: AddPhraseState::from_store(store),
             edit_phrase_state: EditPhraseState::new(store.phrases.len()),
+            settings_menu_state: MenuState::new(SETTINGS_MENU_ITEMS.len()),
+            settings_languages_state: SettingsLanguagesState::default(),
+            settings_attempts_state: SettingsAttemptsState::from_store(store),
             translation_session: None,
         }
     }

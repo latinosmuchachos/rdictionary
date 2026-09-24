@@ -15,7 +15,7 @@ pub use add_phrase::render_add_phrase;
 pub use edit_phrase::render_edit_phrase;
 pub use edit_phrase_confirm::render_edit_phrase_confirm;
 pub use phrase_browser::render_phrase_browser;
-pub use settings::{render_settings_attempts, render_settings_languages, render_settings_menu};
+pub use settings::{render_settings_languages, render_settings_menu, render_settings_number};
 pub use translation::{
     render_how_many_will_translate, render_translate_word, render_translation_result,
 };

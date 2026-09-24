@@ -169,7 +169,12 @@ fn check_answer(session: &mut TranslationSession, store: &mut Store) {
         session.error = Some("Enter a translation.".to_owned());
         return;
     }
-    let correct = answer.trim().to_lowercase() == phrase.translation_text.trim().to_lowercase();
+    let correct = answer.trim().to_lowercase()
+        == session
+            .direction
+            .expected_answer(phrase)
+            .trim()
+            .to_lowercase();
     let previous_step = phrase.memorizing_context.current_step;
     let mut updated = phrase.clone();
     updated
@@ -186,6 +191,7 @@ fn check_answer(session: &mut TranslationSession, store: &mut Store) {
             );
             tracing::debug!(
                 phrase_id = updated.id,
+                direction = ?session.direction,
                 correct,
                 previous_step = ?previous_step,
                 current_step = ?updated.memorizing_context.current_step,

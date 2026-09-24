@@ -3,8 +3,8 @@ use crate::storage::Store;
 use crate::ui::{
     render_add_phrase, render_edit_dictionary_menu, render_edit_phrase, render_edit_phrase_confirm,
     render_how_many_will_translate, render_main_menu, render_phrase_browser,
-    render_settings_attempts, render_settings_languages, render_settings_menu,
-    render_translate_menu, render_translate_word, render_translation_result,
+    render_settings_languages, render_settings_menu, render_settings_number, render_translate_menu,
+    render_translate_word, render_translation_result,
 };
 use color_eyre::Result;
 use ratatui::Frame;
@@ -52,7 +52,9 @@ impl Tui {
             }
             AppPage::SettingsMenu => (render_settings_menu, "render_settings_menu"),
             AppPage::SettingsLanguages => (render_settings_languages, "render_settings_languages"),
-            AppPage::SettingsAttempts => (render_settings_attempts, "render_settings_attempts"),
+            AppPage::SettingsAttempts | AppPage::SettingsReverseProbability => {
+                (render_settings_number, "render_settings_number")
+            }
         };
         tracing::debug!(
             renderer = renderer,
@@ -94,7 +96,10 @@ impl Tui {
                 edit_phrase_confirm::handle_key(&mut app.context, &mut app.store, key);
                 return Ok(());
             }
-            AppPage::SettingsMenu | AppPage::SettingsLanguages | AppPage::SettingsAttempts => {
+            AppPage::SettingsMenu
+            | AppPage::SettingsLanguages
+            | AppPage::SettingsAttempts
+            | AppPage::SettingsReverseProbability => {
                 settings::handle_key(&mut app.context, &mut app.store, key);
                 return Ok(());
             }

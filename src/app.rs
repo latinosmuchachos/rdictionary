@@ -22,8 +22,8 @@ mod state;
 mod translation;
 
 pub use state::{
-    AddPhraseState, AddPhraseStep, EditPhraseState, EditPhraseStep, SettingsAttemptsState,
-    SettingsLanguagesState,
+    AddPhraseState, AddPhraseStep, EditPhraseState, EditPhraseStep, SettingsLanguagesState,
+    SettingsNumberState,
 };
 pub use translation::{TranslationMode, TranslationSession};
 
@@ -59,6 +59,7 @@ pub enum AppPage {
     SettingsMenu,
     SettingsLanguages,
     SettingsAttempts,
+    SettingsReverseProbability,
 }
 
 pub struct AppContext {
@@ -73,7 +74,7 @@ pub struct AppContext {
     pub edit_phrase_state: EditPhraseState,
     pub settings_menu_state: MenuState,
     pub settings_languages_state: SettingsLanguagesState,
-    pub settings_attempts_state: SettingsAttemptsState,
+    pub settings_number_state: SettingsNumberState,
     pub translation_session: Option<TranslationSession>,
 }
 
@@ -109,7 +110,7 @@ impl AppContext {
             edit_phrase_state: EditPhraseState::new(store.phrases.len()),
             settings_menu_state: MenuState::new(SETTINGS_MENU_ITEMS.len()),
             settings_languages_state: SettingsLanguagesState::default(),
-            settings_attempts_state: SettingsAttemptsState::from_store(store),
+            settings_number_state: SettingsNumberState::new(store.settings.needed_attempts),
             translation_session: None,
         }
     }

@@ -310,18 +310,18 @@ pub struct SettingsLanguagesState {
 }
 
 #[derive(Debug)]
-pub struct SettingsAttemptsState {
+pub struct SettingsNumberState {
     pub input: TextArea<'static>,
     pub error: Option<String>,
     pub saved: bool,
 }
 
-impl SettingsAttemptsState {
-    pub fn from_store(store: &Store) -> Self {
-        let mut input = TextArea::from([store.settings.needed_attempts.to_string()]);
+impl SettingsNumberState {
+    pub fn new(value: u8) -> Self {
+        let mut input = TextArea::from([value.to_string()]);
         input.set_block(
             Block::default()
-                .title(" Consecutive correct answers (1-255) ")
+                .title(" Value ")
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(Color::Yellow)),
@@ -336,11 +336,11 @@ impl SettingsAttemptsState {
         }
     }
 
-    pub fn parsed_attempts(&self) -> Option<u8> {
+    pub fn parsed_value(&self, range: std::ops::RangeInclusive<u8>) -> Option<u8> {
         self.input.lines()[0]
             .parse::<u8>()
             .ok()
-            .filter(|attempts| *attempts > 0)
+            .filter(|value| range.contains(value))
     }
 }
 

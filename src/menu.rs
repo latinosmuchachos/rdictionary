@@ -10,4 +10,8 @@ pub const EDIT_PHRASE_FIELD_ITEMS: [&str; 3] = ["Original", "Translation", "Both
 
 pub const EDIT_PHRASE_AFTER_SAVE_ITEMS: [&str; 2] = ["Main Menu", "Edit Dictionary Menu"];
 
-pub const SETTINGS_MENU_ITEMS: [&str; 2] = ["Default languages", "Consecutive correct answers"];
+pub const SETTINGS_MENU_ITEMS: [&str; 3] = [
+    "Default languages",
+    "Consecutive correct answers",
+    "Reverse translation probability",
+];

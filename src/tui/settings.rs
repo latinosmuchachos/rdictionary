@@ -2,7 +2,7 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use tui_textarea::Input;
 
 use crate::{
-    app::{AppContext, AppInputMode, AppPage, SettingsAttemptsState, SettingsLanguagesState},
+    app::{AppContext, AppInputMode, AppPage, SettingsLanguagesState, SettingsNumberState},
     storage::Store,
 };
 
@@ -20,10 +20,15 @@ pub(super) fn handle_key(context: &mut AppContext, store: &mut Store, key: KeyEv
     match context.current_page {
         AppPage::SettingsMenu => handle_menu(context, store, key.code),
         AppPage::SettingsLanguages => handle_languages(context, store, key.code),
-        AppPage::SettingsAttempts => handle_attempts(context, store, key),
+        AppPage::SettingsAttempts | AppPage::SettingsReverseProbability => {
+            handle_number(context, store, key)
+        }
         _ => return,
     }
-    context.input_mode = if context.current_page == AppPage::SettingsAttempts {
+    context.input_mode = if matches!(
+        context.current_page,
+        AppPage::SettingsAttempts | AppPage::SettingsReverseProbability
+    ) {
         AppInputMode::Text
     } else {
         AppInputMode::Key
@@ -40,8 +45,14 @@ fn handle_menu(context: &mut AppContext, store: &Store, code: KeyCode) {
                 context.current_page = AppPage::SettingsLanguages;
             }
             1 => {
-                context.settings_attempts_state = SettingsAttemptsState::from_store(store);
+                context.settings_number_state =
+                    SettingsNumberState::new(store.settings.needed_attempts);
                 context.current_page = AppPage::SettingsAttempts;
+            }
+            2 => {
+                context.settings_number_state =
+                    SettingsNumberState::new(store.settings.reverse_translation_probability);
+                context.current_page = AppPage::SettingsReverseProbability;
             }
             _ => {}
         },
@@ -132,26 +143,40 @@ fn handle_languages(context: &mut AppContext, store: &mut Store, code: KeyCode) 
     }
 }
 
-fn handle_attempts(context: &mut AppContext, store: &mut Store, key: KeyEvent) {
-    let state = &mut context.settings_attempts_state;
+fn handle_number(context: &mut AppContext, store: &mut Store, key: KeyEvent) {
+    let reverse_probability = context.current_page == AppPage::SettingsReverseProbability;
+    let range = if reverse_probability {
+        0..=100
+    } else {
+        1..=255
+    };
+    let state = &mut context.settings_number_state;
     match key.code {
         KeyCode::Esc => context.current_page = AppPage::SettingsMenu,
         KeyCode::Enter => {
             state.saved = false;
-            let Some(attempts) = state.parsed_attempts() else {
-                state.error = Some("Enter a whole number from 1 to 255.".to_owned());
+            let Some(value) = state.parsed_value(range.clone()) else {
+                state.error = Some(format!(
+                    "Enter a whole number from {} to {}.",
+                    range.start(),
+                    range.end()
+                ));
                 return;
             };
             let mut settings = store.settings.clone();
-            settings.needed_attempts = attempts;
+            if reverse_probability {
+                settings.reverse_translation_probability = value;
+            } else {
+                settings.needed_attempts = value;
+            }
             match store.update_settings(settings) {
                 Ok(()) => {
                     state.error = None;
                     state.saved = true;
-                    tracing::debug!(needed_attempts = attempts, "Saved required attempts");
+                    tracing::debug!(page = ?context.current_page, value, "Saved numeric setting");
                 }
                 Err(error) => {
-                    tracing::error!(error = %error, "Could not save required attempts");
+                    tracing::error!(error = %error, "Could not save numeric setting");
                     state.error = Some(format!("Could not save settings: {error:#}"));
                 }
             }

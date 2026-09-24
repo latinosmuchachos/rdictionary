@@ -5,7 +5,11 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 
-use crate::{app::AppContext, menu::SETTINGS_MENU_ITEMS, storage::Store};
+use crate::{
+    app::{AppContext, AppPage},
+    menu::SETTINGS_MENU_ITEMS,
+    storage::Store,
+};
 
 use super::render_menu;
 
@@ -127,8 +131,25 @@ pub fn render_settings_languages(context: &mut AppContext, store: &Store, frame:
     }
 }
 
-pub fn render_settings_attempts(context: &mut AppContext, store: &Store, frame: &mut Frame) {
-    let state = &context.settings_attempts_state;
+pub fn render_settings_number(context: &mut AppContext, store: &Store, frame: &mut Frame) {
+    let state = &context.settings_number_state;
+    let (title, description_text) = match context.current_page {
+        AppPage::SettingsAttempts => (
+            "Consecutive correct answers (1-255)",
+            format!(
+                "Saved value: {}\nNumber of correct answers in a row required to advance a phrase.\nApplies to new phrases. Existing phrases keep their current value.",
+                store.settings.needed_attempts,
+            ),
+        ),
+        AppPage::SettingsReverseProbability => (
+            "Reverse translation probability (0-100%)",
+            format!(
+                "Saved value: {}%\n0%: original -> translation.\n100%: translation -> original.\nBetween 0% and 100%: direction is chosen randomly for each phrase.\nApplies to new sessions. Progress and errors are shared between directions.",
+                store.settings.reverse_translation_probability,
+            ),
+        ),
+        _ => return,
+    };
     let [header, input, description, status, footer] = Layout::vertical([
         Constraint::Length(1),
         Constraint::Length(3),
@@ -138,15 +159,12 @@ pub fn render_settings_attempts(context: &mut AppContext, store: &Store, frame: 
     ])
     .areas(frame.area());
     frame.render_widget(
-        Paragraph::new("Consecutive correct answers").style(Style::default().fg(Color::Yellow)),
+        Paragraph::new(title).style(Style::default().fg(Color::Yellow)),
         header,
     );
     frame.render_widget(&state.input, input);
     frame.render_widget(
-        Paragraph::new(format!(
-            "Saved value: {}\nNumber of correct answers in a row required to advance a phrase.\nApplies to new phrases. Existing phrases keep their current value.",
-            store.settings.needed_attempts,
-        )).wrap(Wrap { trim: false }),
+        Paragraph::new(description_text).wrap(Wrap { trim: false }),
         description,
     );
     render_status(frame, status, state.error.as_deref(), state.saved);

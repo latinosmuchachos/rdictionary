@@ -149,6 +149,11 @@ impl Store {
         if self.settings.needed_attempts == 0 {
             return Err(eyre!("needed_attempts must be greater than zero"));
         }
+        if self.settings.reverse_translation_probability > 100 {
+            return Err(eyre!(
+                "reverse_translation_probability must be between 0 and 100"
+            ));
+        }
         Ok(())
     }
 

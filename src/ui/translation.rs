@@ -39,7 +39,8 @@ pub fn render_how_many_will_translate(context: &mut AppContext, store: &Store, f
         "No phrases are due for this mode and language pair.".to_owned()
     } else {
         format!(
-            "Available phrases: {available}\nEnter a number from 1 to 255, or press u to practice all available phrases.\nIf the number is larger than the queue, the session uses all available phrases."
+            "Available phrases: {available}\nReverse translation probability: {}%\nEnter a number from 1 to 255, or press u to practice all available phrases.\nIf the number is larger than the queue, the session uses all available phrases.",
+            store.settings.reverse_translation_probability,
         )
     };
     frame.render_widget(Paragraph::new(description).wrap(Wrap { trim: false }), info);
@@ -74,6 +75,7 @@ pub fn render_translate_word(context: &mut AppContext, store: &Store, frame: &mu
         return;
     };
     let answered = session.last_answer_correct.is_some();
+    let (source_language, target_language) = session.direction.language_ids(phrase);
     let [header, content, input, feedback, error, footer] = Layout::vertical([
         Constraint::Length(2),
         Constraint::Min(3),
@@ -85,9 +87,10 @@ pub fn render_translate_word(context: &mut AppContext, store: &Store, frame: &mu
     .areas(frame.area());
     frame.render_widget(
         Paragraph::new(format!(
-            "{:?} | {} | Phrase {}/{}{}\nCorrect: {} | Incorrect: {}",
+            "{:?} | {} -> {} | Phrase {}/{}{}\nCorrect: {} | Incorrect: {}",
             session.mode,
-            language_pair(store),
+            language_name(store, source_language),
+            language_name(store, target_language),
             session.current_idx + 1,
             session.queue.len(),
             if session.unlimited {
@@ -105,16 +108,16 @@ pub fn render_translate_word(context: &mut AppContext, store: &Store, frame: &mu
 
     let text = if answered {
         format!(
-            "Original:\n{}\n\nYour answer:\n{}\n\nCorrect translation:\n{}\n\nLevel: {:?} | Consecutive correct answers: {}/{}",
-            phrase.original_text,
+            "Prompt:\n{}\n\nYour answer:\n{}\n\nCorrect translation:\n{}\n\nLevel: {:?} | Consecutive correct answers: {}/{}",
+            session.direction.prompt(phrase),
             session.input.lines().join("\n"),
-            phrase.translation_text,
+            session.direction.expected_answer(phrase),
             phrase.memorizing_context.current_step,
             phrase.memorizing_context.current_attempt,
             phrase.memorizing_context.needed_attempts
         )
     } else {
-        phrase.original_text.clone()
+        session.direction.prompt(phrase).to_owned()
     };
     let block = Block::default()
         .title(format!(" Phrase #{} ", phrase.id))
@@ -205,17 +208,18 @@ pub fn render_translation_result(context: &mut AppContext, store: &Store, frame:
 }
 
 fn language_pair(store: &Store) -> String {
-    let name = |id| {
-        store
-            .languages
-            .iter()
-            .find(|language| language.id == id)
-            .map(|language| language.name.as_str())
-            .unwrap_or("Unknown language")
-    };
     format!(
-        "{} -> {}",
-        name(store.settings.default_original_language_id),
-        name(store.settings.default_translation_language_id)
+        "{} / {}",
+        language_name(store, store.settings.default_original_language_id),
+        language_name(store, store.settings.default_translation_language_id)
     )
+}
+
+fn language_name(store: &Store, id: u32) -> &str {
+    store
+        .languages
+        .iter()
+        .find(|language| language.id == id)
+        .map(|language| language.name.as_str())
+        .unwrap_or("Unknown language")
 }

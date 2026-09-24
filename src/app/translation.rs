@@ -48,6 +48,43 @@ impl TranslationMode {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TranslationDirection {
+    Forward,
+    Reverse,
+}
+
+impl TranslationDirection {
+    fn choose(reverse_probability: u8) -> Self {
+        if rand::random_ratio(u32::from(reverse_probability), 100) {
+            Self::Reverse
+        } else {
+            Self::Forward
+        }
+    }
+
+    pub fn prompt(self, phrase: &Phrase) -> &str {
+        match self {
+            Self::Forward => &phrase.original_text,
+            Self::Reverse => &phrase.translation_text,
+        }
+    }
+
+    pub fn expected_answer(self, phrase: &Phrase) -> &str {
+        match self {
+            Self::Forward => &phrase.translation_text,
+            Self::Reverse => &phrase.original_text,
+        }
+    }
+
+    pub fn language_ids(self, phrase: &Phrase) -> (u32, u32) {
+        match self {
+            Self::Forward => (phrase.original_language_id, phrase.translation_language_id),
+            Self::Reverse => (phrase.translation_language_id, phrase.original_language_id),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct SessionStats {
     pub correct: u32,
@@ -77,6 +114,8 @@ impl SessionStats {
 
 pub struct TranslationSession {
     pub mode: TranslationMode,
+    pub direction: TranslationDirection,
+    reverse_probability: u8,
     pub queue: Vec<Phrase>,
     pub current_idx: usize,
     pub unlimited: bool,
@@ -100,7 +139,7 @@ impl TranslationSession {
             })
             .cloned()
             .collect();
-        
+
         queue.sort_by_key(|phrase| {
             let context = &phrase.memorizing_context;
             (
@@ -111,6 +150,8 @@ impl TranslationSession {
         });
         Self {
             mode,
+            direction: TranslationDirection::choose(store.settings.reverse_translation_probability),
+            reverse_probability: store.settings.reverse_translation_probability,
             queue,
             current_idx: 0,
             unlimited: false,
@@ -142,6 +183,9 @@ impl TranslationSession {
 
     pub fn advance(&mut self) {
         self.current_idx = self.current_idx.saturating_add(1).min(self.queue.len());
+        if self.current_phrase().is_some() {
+            self.direction = TranslationDirection::choose(self.reverse_probability);
+        }
         self.input = Self::make_input();
         self.last_answer_correct = None;
         self.error = None;
@@ -153,6 +197,7 @@ impl fmt::Debug for TranslationSession {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TranslationSession")
             .field("mode", &self.mode)
+            .field("direction", &self.direction)
             .field("current_idx", &self.current_idx)
             .field("count_in_queue", &self.queue.len())
             .field("unlimited", &self.unlimited)

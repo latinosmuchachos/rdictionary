@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{cmp::Reverse, fmt};
 
 use chrono::{Datelike, Duration, NaiveDate};
 use ratatui::{
@@ -89,7 +89,7 @@ pub struct TranslationSession {
 
 impl TranslationSession {
     pub fn from_store(store: &Store, mode: TranslationMode, today: NaiveDate) -> Self {
-        let queue = store
+        let mut queue: Vec<Phrase> = store
             .phrases
             .iter()
             .filter(|phrase| {
@@ -100,6 +100,15 @@ impl TranslationSession {
             })
             .cloned()
             .collect();
+        
+        queue.sort_by_key(|phrase| {
+            let context = &phrase.memorizing_context;
+            (
+                Reverse(context.failures.count(context.current_step)),
+                context.last_attempt_time,
+                phrase.id,
+            )
+        });
         Self {
             mode,
             queue,

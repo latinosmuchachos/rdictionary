@@ -27,12 +27,44 @@ impl MemorizingStep {
     }
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FailuresByStep {
+    pub new: u32,
+    pub daily: u32,
+    pub weekly: u32,
+    pub monthly: u32,
+}
+
+impl FailuresByStep {
+    pub fn count(&self, step: MemorizingStep) -> u32 {
+        match step {
+            MemorizingStep::New => self.new,
+            MemorizingStep::Daily => self.daily,
+            MemorizingStep::Weekly => self.weekly,
+            MemorizingStep::Monthly => self.monthly,
+        }
+    }
+
+    pub fn increment(&mut self, step: MemorizingStep) {
+        let count = match step {
+            MemorizingStep::New => &mut self.new,
+            MemorizingStep::Daily => &mut self.daily,
+            MemorizingStep::Weekly => &mut self.weekly,
+            MemorizingStep::Monthly => &mut self.monthly,
+        };
+        *count = count.saturating_add(1);
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemorizingContext {
     pub current_step: MemorizingStep,
     pub needed_attempts: u8,
     pub current_attempt: u8,
     pub last_attempt_time: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub failures: FailuresByStep,
 }
 
 impl MemorizingContext {
@@ -44,6 +76,8 @@ impl MemorizingContext {
                 self.current_attempt = 0;
             }
         } else {
+
+            self.failures.increment(self.current_step);
             self.current_attempt = 0;
             self.current_step = self.current_step.prev_clamped();
         }

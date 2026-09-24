@@ -9,7 +9,7 @@ use color_eyre::{
 };
 use serde::{Serialize, de::DeserializeOwned};
 
-use crate::models::{Language, MemorizingContext, MemorizingStep, Phrase};
+use crate::models::{FailuresByStep, Language, MemorizingContext, MemorizingStep, Phrase};
 
 use super::Settings;
 
@@ -88,6 +88,7 @@ impl Store {
                 needed_attempts: self.settings.needed_attempts,
                 current_attempt: 0,
                 last_attempt_time: None,
+                failures: FailuresByStep::default(),
             },
         };
         let phrase_id = phrase.id;

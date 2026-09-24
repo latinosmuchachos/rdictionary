@@ -7,7 +7,11 @@ use ratatui::{
 use regex::Regex;
 use tui_textarea::{CursorMove, TextArea};
 
-use crate::{menu::EDIT_PHRASE_FIELD_ITEMS, models::Phrase, storage::Store};
+use crate::{
+    menu::{EDIT_PHRASE_AFTER_SAVE_ITEMS, EDIT_PHRASE_FIELD_ITEMS},
+    models::Phrase,
+    storage::Store,
+};
 
 use super::TranslationMode;
 
@@ -237,6 +241,8 @@ pub struct EditPhraseState {
     pub original_field: TextArea<'static>,
     pub translation_field: TextArea<'static>,
     pub confirm_selected: bool,
+    pub confirm_scroll: u16,
+    pub after_save_menu: Option<MenuState>,
     pub error: Option<String>,
 }
 
@@ -250,18 +256,35 @@ impl EditPhraseState {
             original_field: TextArea::default(),
             translation_field: TextArea::default(),
             confirm_selected: false,
+            confirm_scroll: 0,
+            after_save_menu: None,
             error: None,
         }
     }
 
     pub fn start_editing(&mut self, phrase: &Phrase) {
+        self.clear_editing();
         self.editing_phrase = Some(phrase.clone());
         self.original_field = Self::make_input(&phrase.original_text, "Original");
         self.translation_field = Self::make_input(&phrase.translation_text, "Translation");
+    }
+
+    pub fn clear_editing(&mut self) {
+        self.editing_phrase = None;
+        self.original_field = TextArea::default();
+        self.translation_field = TextArea::default();
         self.edit_step = EditPhraseStep::SelectField;
         self.field_menu.selected = 0;
         self.confirm_selected = false;
+        self.confirm_scroll = 0;
+        self.after_save_menu = None;
         self.error = None;
+    }
+
+    pub fn finish_saving(&mut self, phrases: &[Phrase]) {
+        self.clear_editing();
+        self.browser.apply_filter(phrases);
+        self.after_save_menu = Some(MenuState::new(EDIT_PHRASE_AFTER_SAVE_ITEMS.len()));
     }
 
     fn make_input(text: &str, title: &'static str) -> TextArea<'static> {

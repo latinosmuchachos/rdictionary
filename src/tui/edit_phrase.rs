@@ -28,10 +28,7 @@ pub(super) fn handle_key(context: &mut AppContext, key: KeyEvent) {
                 };
             }
             KeyCode::Esc => {
-                state.editing_phrase = None;
-                state.original_field = TextArea::default();
-                state.translation_field = TextArea::default();
-                state.error = None;
+                state.clear_editing();
                 context.current_page = AppPage::EditPhraseBrowser;
             }
             _ => {}
@@ -116,6 +113,8 @@ fn prepare_confirmation(state: &mut EditPhraseState) -> bool {
         phrase.translation_text = state.translation_field.lines().join("\n").trim().to_owned();
     }
     state.confirm_selected = false;
+    state.confirm_scroll = 0;
+    state.after_save_menu = None;
     state.error = None;
     tracing::debug!(
         phrase_id = phrase.id,

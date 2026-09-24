@@ -64,7 +64,6 @@ pub(super) fn handle_key(context: &mut AppContext, store: &mut Store, key: KeyEv
             context.current_page = AppPage::EditPhraseBrowser;
         }
         KeyCode::Enter => {
-            // Keep the draft available if saving fails; Store rolls back its own changes.
             match store.update_phrase(phrase.clone()) {
                 Ok(()) => {
                     tracing::debug!(
